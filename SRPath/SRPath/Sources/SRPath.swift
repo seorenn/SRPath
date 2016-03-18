@@ -85,17 +85,6 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
         self.init(path.URL)
     }
     
-    public init?(creatingDirectoryURL: NSURL, intermediateDirectories: Bool) {
-        self.URL = creatingDirectoryURL
-        if SRPath.mkdir(creatingDirectoryURL.path!, intermediateDirectories: intermediateDirectories) == false {
-            return nil
-        }
-    }
-    
-    public init?(creatingDirectoryPath: String, intermediateDirectories: Bool) {
-        self.init(creatingDirectoryURL: NSURL(fileURLWithPath: creatingDirectoryPath), intermediateDirectories: intermediateDirectories)
-    }
-    
     public var contents: [SRPath] {
         guard self.isDirectory == true else {
             return [SRPath]()
@@ -210,8 +199,11 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
 #endif
     }
     
-    public func movedPathToURL(URL: NSURL) -> SRPath? {
-        let newURL = URL.URLByAppendingPathComponent(self.name)
+    // move self to some directory
+    public func moveTo(path: SRPath) -> SRPath? {
+        guard path.isDirectory else { return nil }
+        
+        let newURL = path.URL.URLByAppendingPathComponent(self.name)
         do {
             try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newURL)
             return SRPath(newURL)
@@ -219,16 +211,8 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
             return nil
         }
     }
-    public func movedToPathString(pathString: String) -> SRPath? {
-        return self.movedPathToURL(NSURL(fileURLWithPath: pathString))
-    }
-    public func movedToPath(path: SRPath) -> SRPath? {
-        if path.exists == false || path.isFile { return nil }
-        
-        return self.movedPathToURL(path.URL)
-    }
-
-    public func renamedPath(name: String) -> SRPath? {
+    
+    public func rename(name: String) -> SRPath? {
         let newPath = self.parentURL.URLByAppendingPathComponent(name)
         do {
             try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newPath)
@@ -351,9 +335,31 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
         return NSURL(fileURLWithPath: path.string, isDirectory: true)
     }
     
-    public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> Bool {
+    public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> SRPath? {
         do {
             try _fm.createDirectoryAtPath(pathString, withIntermediateDirectories: intermediateDirectories, attributes: nil)
+            return SRPath(pathString)
+        } catch {
+            return nil
+        }
+    }
+    
+    public func mkdir(intermediateDirectories: Bool = false) -> SRPath? {
+        do {
+            try _fm.createDirectoryAtPath(self.string, withIntermediateDirectories: intermediateDirectories, attributes: nil)
+            return self
+        } catch {
+            return nil
+        }
+    }
+    
+    public func mkdir(path: SRPath, intermediateDirectories: Bool = false) -> SRPath? {
+        return SRPath.mkdir(path.string, intermediateDirectories: intermediateDirectories)
+    }
+    
+    public static func mv(fromPath: SRPath, toPath: SRPath) -> Bool {
+        do {
+            try NSFileManager.defaultManager().moveItemAtURL(fromPath.URL, toURL: toPath.URL)
             return true
         } catch {
             return false

@@ -24,11 +24,9 @@ file.extensionName        // "txt"
 
 Create Directory:
 
-TODO: This will be change to another method.
-
 <pre>
-let path = file.documentsPath + "/anotherFile.txt"
-let newDir = SRPath(creatingDirectoryPath: path.string, intermediateDirectories: true)
+let path = SRPath.mkdir(file.documentsPath + "anotherFile.txt", intermediateDirectories: true)
+let pathAnother = SRPath("/foo/bar/path").mkdir()
 </pre>
 
 Directory Iteration:

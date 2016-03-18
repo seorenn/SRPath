@@ -101,17 +101,16 @@ class SRPathTests: XCTestCase {
     
     func testSRPathCreateAndRemove() {
         let path = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest")
-        let dir = SRPath(creatingDirectoryURL: path, intermediateDirectories: false)
+        //let dir = SRPath(creatingDirectoryURL: path, intermediateDirectories: false)
+        let dir = SRPath(path).mkdir()
         XCTAssertNotNil(dir)
-        XCTAssertTrue(dir!.exists)
-        
         XCTAssertTrue(dir!.trash())
         XCTAssertFalse(dir!.exists)
     }
     
     func testSRPathCreateAndRemoveWithIntermediation() {
         let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest/Another/Deep/Directory")
-        let dir = SRPath(creatingDirectoryURL: url, intermediateDirectories: true)
+        let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
         XCTAssertNotNil(dir)
         XCTAssertTrue(dir!.exists)
         
@@ -123,9 +122,9 @@ class SRPathTests: XCTestCase {
     
     func testSRPathRename() {
         let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest-Previous")
-        let dir = SRPath(creatingDirectoryURL: url, intermediateDirectories: true)
+        let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
         XCTAssertNotNil(dir)
-        let renamedFile = dir!.renamedPath("SRDirectoryTest-New")!
+        let renamedFile = dir!.rename("SRDirectoryTest-New")!
         XCTAssertEqual(renamedFile.name, "SRDirectoryTest-New")
         XCTAssertTrue(renamedFile.exists)
         
@@ -133,13 +132,15 @@ class SRPathTests: XCTestCase {
     }
     
     func testSRPathMove() {
-        let oldContainer = SRPath(creatingDirectoryURL: SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer1"), intermediateDirectories: true)!
+        let oldContainer = SRPath.mkdir(SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer1").path!, intermediateDirectories: true)!
         
-        let content = SRPath(creatingDirectoryURL: oldContainer.childPath("content-dir").URL, intermediateDirectories: true)!
+        let content = oldContainer.childPath("content-dir").mkdir(true)!
+        //let content = SRPath.mkdir(oldContainer.childPath("content-dir").string, intermediateDirectories: true)!
         
-        let newContainer = SRPath(creatingDirectoryURL: SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer2"), intermediateDirectories: true)!
+        let newContainer = SRPath.mkdir(SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer2").path!, intermediateDirectories: true)!
+        XCTAssertTrue(newContainer.isDirectory)
         
-        let movedFile = content.movedToPath(newContainer)!
+        let movedFile = content.moveTo(newContainer)!
         XCTAssertEqual(movedFile.string.stringByDeletingLastPathComponent.lastPathComponent, "SRDirectoryContainer2")
         
         XCTAssertEqual(oldContainer.directories.count, 0)
