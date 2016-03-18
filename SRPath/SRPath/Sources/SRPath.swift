@@ -381,6 +381,11 @@ public func == (left: SRPath, right: SRPath) -> Bool {
     return left.string == right.string
 }
 
+public func + (left: SRPath, right: String) -> SRPath {
+    assert(left.isDirectory, "lvalue is not directory")
+    return left.childPath(right)
+}
+
 // MARK: - Helper Functions
 
 public func dir(URL: NSURL = NSURL(fileURLWithPath: "./")) -> [SRPath] {

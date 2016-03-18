@@ -15,7 +15,7 @@
 
 @protocol SRPathMonitorImplDelegate/* <NSObject>*/
 
-- (void)pathMonitorImpl:(nonnull SRPathMonitorImpl *)fileMonitorImpl
+- (void)pathMonitorImpl:(nonnull SRPathMonitorImpl *)pathMonitorImpl
        detectEventPaths:(nonnull NSArray<NSString *> *)paths
                   flags:(nonnull NSArray<NSNumber *> *)flags;
 

@@ -78,6 +78,12 @@ class SRPathTests: XCTestCase {
         let downloadsDir = SRPath.downloadsPath
         XCTAssertTrue(downloadsDir.exists)
         
+        let downloadsAnother = SRPath.downloadsPath + "someFile.txt"
+        XCTAssertEqual(downloadsAnother.string, downloadsDir.string + "/someFile.txt")
+        
+        let downloadsSoAnother = SRPath.downloadsPath + "/Another Music.mp3"
+        XCTAssertEqual(downloadsSoAnother.string, downloadsDir.string + "//Another Music.mp3")
+        
         XCTAssertEqual(downloadsDir.name, "Downloads")
         
         XCTAssertEqual(SRPath("/test/directory/").name, "directory")
