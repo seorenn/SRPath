@@ -1,0 +1,4 @@
+module SRPathPrivates {
+    header "../SRPathMonitorImpl.h"
+    export *
+}
