@@ -59,19 +59,7 @@ class SRPathTests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measureBlock {
-            // Put the code you want to measure the time of here.
-        }
-    }
-    
-    func testSRPathMisc() {
+    func testMisc() {
         let dir = SRPath("/not/exists/path")
         XCTAssertFalse(dir.exists)
         
@@ -99,7 +87,7 @@ class SRPathTests: XCTestCase {
         XCTAssertEqual(f.parentPath!.string, "/not/exists/path")
     }
     
-    func testSRPathCreateAndRemove() {
+    func testCreateAndRemove() {
         let path = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest")
         //let dir = SRPath(creatingDirectoryURL: path, intermediateDirectories: false)
         let dir = SRPath(path).mkdir()
@@ -108,7 +96,7 @@ class SRPathTests: XCTestCase {
         XCTAssertFalse(dir!.exists)
     }
     
-    func testSRPathCreateAndRemoveWithIntermediation() {
+    func testCreateAndRemoveWithIntermediation() {
         let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest/Another/Deep/Directory")
         let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
         XCTAssertNotNil(dir)
@@ -120,7 +108,7 @@ class SRPathTests: XCTestCase {
         XCTAssertFalse(remDir.exists)
     }
     
-    func testSRPathRename() {
+    func testRename() {
         let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest-Previous")
         let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
         XCTAssertNotNil(dir)
@@ -131,7 +119,7 @@ class SRPathTests: XCTestCase {
         renamedFile.trash()
     }
     
-    func testSRPathMove() {
+    func testMove() {
         let oldContainer = SRPath.mkdir(SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer1").path!, intermediateDirectories: true)!
         
         let content = oldContainer.childPath("content-dir").mkdir(true)!
@@ -164,39 +152,7 @@ class SRPathTests: XCTestCase {
         XCTAssertEqual(String(file), "/Some/Special/File")
     }
     
-    /*
-    func testSRFileOperations() {
-    let filename = "SRFileTest-rw-file.txt"
-    let path = SRFile.pathForDocuments.stringByAppendingPathComponent(filename)
-    let f = SRFile(path)
-    let content = "Hello World!\n(This is test text document wrote by SRFile)\n"
-    XCTAssert(f.exists == false)
-    
-    if let handle = f.openForWriting() {
-    handle.text = content
-    handle.close()
-    } else {
-    XCTAssert(false)
-    }
-    
-    XCTAssert(f.exists == true)
-    
-    if let fin = f.openForReading() {
-    let readedData = fin.data
-    XCTAssert(readedData != nil)
-    let readedContent = NSString(data: readedData!, encoding: NSUTF8StringEncoding)
-    
-    XCTAssert(readedContent == content)
-    
-    XCTAssert(f.trash() == true)
-    XCTAssert(f.exists == false)
-    } else {
-    XCTAssert(false)
-    }
-    }
-    */
-    
-    func testSRFileSizeString() {
+    func testSizeString() {
         XCTAssertEqual(HumanReadableFileSize(UInt64(1025)), "1KB")
         XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.4KB")
         XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024)), "1MB")
@@ -204,9 +160,9 @@ class SRPathTests: XCTestCase {
         XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024 * 1024)), "1TB")
     }
     
-    func testSRFileOperation() {
+    func testFileHandleOperation() {
         let dateString = currentTimeString()
-        let filename = "SRFileTest-\(dateString).txt"
+        let filename = "SRPathTest-\(dateString).txt"
         let path = SRPath.documentsPath.string.stringByAppendingPathComponent(filename)
         let testContent = "This\nis\ntest content.\nEOF"
         
@@ -224,7 +180,7 @@ class SRPathTests: XCTestCase {
         }
         
         XCTAssertEqual(f.size, 25)
-        XCTAssertEqual(f.humanReadableSize, "25 B")
+        XCTAssertEqual(f.humanReadableSize, "25B")
         
         let today = NSDate()
         XCTAssertTrue(isEqualDate(today, right: f.creationDate!))

@@ -1,6 +1,6 @@
 //
-//  SRFileMonitorImpl.m
-//  SRFile
+//  SRPathMonitorImpl.m
+//  SRPath
 //
 //  Created by Seorenn on 2015.
 //  Copyright (c) 2015 Seorenn. All rights reserved.

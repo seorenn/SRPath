@@ -34,7 +34,7 @@ private extension Double {
 }
 
 func HumanReadableFileSize(size: UInt64) -> String {
-    if size < 1024 { return "\(size) B" }
+    if size < 1024 { return "\(size)B" }
     
     let fSize = Double(size)
     
@@ -377,7 +377,7 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     }
     
     public var debugDescription: String {
-        return "SRFile(\(self.string))"
+        return "SRPath(\(self.string))"
     }
 }
 
