@@ -12,7 +12,7 @@ import SRPathPrivates
 #if os(OSX)
 
 public protocol SRPathMonitorDelegate {
-    func fileMonitor(fileMonitor: SRPathMonitor, detectEvents: [SRPathEvent])
+    func pathMonitor(pathMonitor: SRPathMonitor, detectEvents: [SRPathEvent])
 }
 
 public class SRPathMonitor: SRPathMonitorImplDelegate {
@@ -96,7 +96,7 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
         }
         
         if let delegate = self.delegate {
-            delegate.fileMonitor(self, detectEvents: events)
+            delegate.pathMonitor(self, detectEvents: events)
         }
     }
 }
