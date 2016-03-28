@@ -208,7 +208,7 @@ class SRPathTests: XCTestCase {
             var index = 0
             while let line = finput.readline() {
                 XCTAssertEqual(line, components[index])
-                index++
+                index += 1
             }
             
             finput.close()
@@ -223,7 +223,7 @@ class SRPathTests: XCTestCase {
             
             for line in lines {
                 XCTAssert(line == components[index])
-                index++
+                index += 1
             }
         } else {
             XCTFail()

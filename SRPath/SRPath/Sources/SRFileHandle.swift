@@ -17,8 +17,7 @@ public enum SRFileHandleMode {
 
 public class SRFileHandle: CustomDebugStringConvertible {
     public let path: SRPath
-    //public let URL: NSURL
-    private let handle: NSFileHandle?
+    private let handle: NSFileHandle
     private let mode: SRFileHandleMode
     private var eofValue: Bool = false
     private lazy var buffer = NSMutableData(capacity: SRFileHandleChunkSize)!
@@ -38,7 +37,6 @@ public class SRFileHandle: CustomDebugStringConvertible {
             self.eofValue = false
         }
         catch {
-            self.handle = nil
             return nil
         }
     }
@@ -46,19 +44,18 @@ public class SRFileHandle: CustomDebugStringConvertible {
     public init?(pathForWriting: SRPath) {
         self.path = pathForWriting
         self.mode = .Write
-        
-        var h = try? NSFileHandle(forWritingToURL: self.path.URL)
-        if h == nil {
+
+        if let h = try? NSFileHandle(forWritingToURL: self.path.URL) {
+            self.handle = h
+        } else {
             NSFileManager.defaultManager().createFileAtPath(self.path.string, contents: nil, attributes: nil)
-            h = try? NSFileHandle(forWritingToURL: self.path.URL)
+            if let h = try? NSFileHandle(forWritingToURL: self.path.URL) {
+                self.handle = h
+            } else {
+                return nil
+            }
         }
         
-        if h == nil {
-            self.handle = nil
-            return nil
-        }
-        
-        self.handle = h
         self.eofValue = false
     }
 
@@ -67,9 +64,7 @@ public class SRFileHandle: CustomDebugStringConvertible {
     }
     
     public func close() {
-        if let h = handle {
-            h.closeFile()
-        }
+        self.handle.closeFile()
     }
 
     public var data: NSData? {
@@ -101,15 +96,15 @@ public class SRFileHandle: CustomDebugStringConvertible {
 
     public func read(length: Int = 0) -> NSData? {
         if length <= 0 {
-            return handle?.readDataToEndOfFile()
+            return self.handle.readDataToEndOfFile()
         } else {
-            return handle?.readDataOfLength(length)
+            return self.handle.readDataOfLength(length)
         }
     }
 
     public func write(data: NSData) {
         assert(mode == .Write, "This handle is read-only.")
-        handle?.writeData(data)
+        self.handle.writeData(data)
     }
 
     public func readline() -> String? {

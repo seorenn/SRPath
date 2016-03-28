@@ -82,7 +82,7 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
         assert(paths.count == eventFlags.count)
         
         var events = [SRPathEvent]()
-        for (var i=0; i < paths.count; i++) {
+        for i in 0..<paths.count {
             let path = paths[i]
             let flag = eventFlags[i]
             
