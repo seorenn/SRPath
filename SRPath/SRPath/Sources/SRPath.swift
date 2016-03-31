@@ -34,26 +34,26 @@ private extension Double {
 }
 
 func HumanReadableFileSize(size: UInt64) -> String {
-    if size < 1024 { return "\(size)B" }
+    if size < 1000 { return "\(size)B" }
     
     let fSize = Double(size)
     
-    let kiloBytes = fSize / 1024
-    if kiloBytes < 1024 {
+    let kiloBytes = fSize / 1000
+    if kiloBytes < 1000 {
         return kiloBytes.firstDecisionString + "KB"
     }
     
-    let megaBytes = kiloBytes / 1024
-    if megaBytes < 1024 {
+    let megaBytes = kiloBytes / 1000
+    if megaBytes < 1000 {
         return megaBytes.firstDecisionString + "MB"
     }
     
-    let gigaBytes = megaBytes / 1024
-    if gigaBytes < 1024 {
+    let gigaBytes = megaBytes / 1000
+    if gigaBytes < 1000 {
         return gigaBytes.firstDecisionString + "GB"
     }
     
-    let teraBytes = gigaBytes / 1024
+    let teraBytes = gigaBytes / 1000
     return teraBytes.firstDecisionString + "TB"
 }
 

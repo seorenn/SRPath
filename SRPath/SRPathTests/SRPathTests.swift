@@ -154,7 +154,7 @@ class SRPathTests: XCTestCase {
     
     func testSizeString() {
         XCTAssertEqual(HumanReadableFileSize(UInt64(1025)), "1KB")
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.4KB")
+        XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.5KB")
         XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024)), "1MB")
         XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024)), "1GB")
         XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024 * 1024)), "1TB")
