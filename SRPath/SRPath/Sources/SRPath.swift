@@ -11,393 +11,421 @@ import Foundation
 private let _fm = NSFileManager.defaultManager()
 
 private extension NSURL {
-    private var isRootDirectory: Bool {
-        return self.path! == "/"
-    }
+  private var isRootDirectory: Bool {
+    return self.path! == "/"
+  }
 }
 
 private extension String {
-    private var firstCharacter: Character {
-        return self[self.startIndex]
-    }
+  private var firstCharacter: Character {
+    return self[self.startIndex]
+  }
 }
 
 private extension Double {
-    private var firstDecisionString: String {
-        let fraction = self - Double(Int(self))
-        if fraction >= 0.1 {
-            return String(format: "%.1f", self)
-        } else {
-            return String(format: "%.0f", self)
-        }
+  private var firstDecisionString: String {
+    let fraction = self - Double(Int(self))
+    if fraction >= 0.1 {
+      return String(format: "%.1f", self)
+    } else {
+      return String(format: "%.0f", self)
     }
+  }
 }
 
 func HumanReadableFileSize(size: UInt64) -> String {
-    if size < 1000 { return "\(size)B" }
-    
-    let fSize = Double(size)
-    
-    let kiloBytes = fSize / 1000
-    if kiloBytes < 1000 {
-        return kiloBytes.firstDecisionString + "KB"
-    }
-    
-    let megaBytes = kiloBytes / 1000
-    if megaBytes < 1000 {
-        return megaBytes.firstDecisionString + "MB"
-    }
-    
-    let gigaBytes = megaBytes / 1000
-    if gigaBytes < 1000 {
-        return gigaBytes.firstDecisionString + "GB"
-    }
-    
-    let teraBytes = gigaBytes / 1000
-    return teraBytes.firstDecisionString + "TB"
+  if size < 1000 { return "\(size)B" }
+  
+  let fSize = Double(size)
+  
+  let kiloBytes = fSize / 1000
+  if kiloBytes < 1000 {
+    return kiloBytes.firstDecisionString + "KB"
+  }
+  
+  let megaBytes = kiloBytes / 1000
+  if megaBytes < 1000 {
+    return megaBytes.firstDecisionString + "MB"
+  }
+  
+  let gigaBytes = megaBytes / 1000
+  if gigaBytes < 1000 {
+    return gigaBytes.firstDecisionString + "GB"
+  }
+  
+  let teraBytes = gigaBytes / 1000
+  return teraBytes.firstDecisionString + "TB"
 }
 
 // TODO: It may be the common type ;-)
 public protocol SRPathType {
-    var exists: Bool { get }
-    var name: String { get }
-    var extensionName: String { get }
-    var isDirectory: Bool { get }
+  var exists: Bool { get }
+  var name: String { get }
+  var extensionName: String { get }
+  var isDirectory: Bool { get }
 }
 
 public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDebugStringConvertible {
+  public let URL: NSURL
+  
+  public var string: String {
+    return self.URL.path!
+  }
 
-    public let URL: NSURL
-    
-    public var string: String {
-        return self.URL.path!
-    }
-
-    public init(_ URL: NSURL) {
-        self.URL = URL
-    }
-    
-    public init(_ pathString: String) {
-        self.init(NSURL(fileURLWithPath: pathString))
-    }
-    
-    public init(_ path: SRPath) {
-        self.init(path.URL)
-    }
-    
-    public var contents: [SRPath] {
-        guard self.isDirectory == true else {
-            return [SRPath]()
-        }
-        
-        let fm = NSFileManager.defaultManager()
-        do {
-            let urls = try fm.contentsOfDirectoryAtURL(self.URL, includingPropertiesForKeys: nil, options: [])
-            let result: [SRPath] = urls.map {
-                return SRPath($0)
-            }
-            return result
-        } catch {
-            return [SRPath]()
-        }
+  public init(_ URL: NSURL) {
+    self.URL = URL
+  }
+  
+  public init(_ pathString: String) {
+    self.init(NSURL(fileURLWithPath: pathString))
+  }
+  
+  public init(_ path: SRPath) {
+    self.init(path.URL)
+  }
+  
+  public var contents: [SRPath] {
+    guard self.isDirectory == true else {
+      return [SRPath]()
     }
     
-    public var exists: Bool {
-        return NSFileManager.defaultManager().fileExistsAtPath(self.string)
+    let fm = NSFileManager.defaultManager()
+    do {
+      let urls = try fm.contentsOfDirectoryAtURL(
+        self.URL,
+        includingPropertiesForKeys: nil,
+        options: [])
+      let result: [SRPath] = urls.map {
+        return SRPath($0)
+      }
+      return result
+    } catch {
+      return [SRPath]()
     }
+  }
+  
+  public var exists: Bool {
+    return NSFileManager.defaultManager().fileExistsAtPath(self.string)
+  }
+  
+  public var isDirectory: Bool {
+    var isDir: ObjCBool = false
+    let exists = _fm.fileExistsAtPath(self.string, isDirectory: &isDir)
     
-    public var isDirectory: Bool {
-        var isDir: ObjCBool = false
-        let exists = _fm.fileExistsAtPath(self.string, isDirectory: &isDir)
-        
-        if !exists { return false }
-        return isDir.boolValue
-    }
+    if !exists { return false }
+    return isDir.boolValue
+  }
+  
+  public var isFile: Bool {
+    return !self.isDirectory
+  }
+  
+  public var isHidden: Bool {
+    return self.name.firstCharacter == Character(".")
+  }
+  
+  public var attributes: [String: AnyObject]? {
+    // Directory has no size
+    guard self.exists else { return nil }
     
-    public var isFile: Bool {
-        return !self.isDirectory
-    }
+    return try! NSFileManager.defaultManager()
+      .attributesOfItemAtPath(self.string)
+  }
+  
+  public var size: UInt64? {
+    guard self.isFile else { return nil }
+    guard let attrs = self.attributes else { return nil }
     
-    public var isHidden: Bool {
-        return self.name.firstCharacter == Character(".")
-    }
+    return UInt64(attrs[NSFileSize]!.longLongValue)
+  }
+  
+  public var modificationDate: NSDate? {
+    guard self.isFile else { return nil }
+    guard let attrs = self.attributes else { return nil }
     
-    public var attributes: [String: AnyObject]? {
-        // Directory has no size
-        guard self.exists else { return nil }
-        
-        return try! NSFileManager.defaultManager().attributesOfItemAtPath(self.string)
-    }
+    let date = attrs[NSFileModificationDate] as! NSDate
+    return date
+  }
+  
+  public var creationDate: NSDate? {
+    guard self.isFile else { return nil }
+    guard let attrs = self.attributes else { return nil }
     
-    public var size: UInt64? {
-        guard self.isFile else { return nil }
-        guard let attrs = self.attributes else { return nil }
-        
-        return UInt64(attrs[NSFileSize]!.longLongValue)
-    }
+    let date = attrs[NSFileCreationDate] as! NSDate
+    return date
+  }
+  
+  public var humanReadableSize: String? {
+    guard let size = self.size else { return nil }
     
-    public var modificationDate: NSDate? {
-        guard self.isFile else { return nil }
-        guard let attrs = self.attributes else { return nil }
-        
-        let date = attrs[NSFileModificationDate] as! NSDate
-        return date
-    }
-    
-    public var creationDate: NSDate? {
-        guard self.isFile else { return nil }
-        guard let attrs = self.attributes else { return nil }
-        
-        let date = attrs[NSFileCreationDate] as! NSDate
-        return date
-    }
-    
-    public var humanReadableSize: String? {
-        guard let size = self.size else { return nil }
-        
-        return HumanReadableFileSize(size)
-    }
-    
-    public var files: [SRPath] {
-        return self.contents.filter({$0.isFile})
-    }
-    
-    public var directories: [SRPath] {
-        return self.contents.filter({$0.isDirectory})
-    }
-    
-    public var name: String {
-        return self.URL.lastPathComponent!
-    }
-    
-    public var parentURL: NSURL {
-        return self.URL.URLByDeletingLastPathComponent!
-    }
-    public var parentPathString: String {
-        return self.parentURL.path!
-    }
-    public var parentPath: SRPath? {
-        if self.URL.isRootDirectory { return nil }
-        return SRPath(self.parentURL)
-    }
-    
-    public var extensionName: String {
-        return self.URL.pathExtension!
-    }
-    
-    public func trash() -> Bool {
+    return HumanReadableFileSize(size)
+  }
+  
+  public var files: [SRPath] {
+    return self.contents.filter({$0.isFile})
+  }
+  
+  public var directories: [SRPath] {
+    return self.contents.filter({$0.isDirectory})
+  }
+  
+  public var name: String {
+    return self.URL.lastPathComponent!
+  }
+  
+  public var parentURL: NSURL {
+    return self.URL.URLByDeletingLastPathComponent!
+  }
+  public var parentPathString: String {
+    return self.parentURL.path!
+  }
+  public var parentPath: SRPath? {
+    if self.URL.isRootDirectory { return nil }
+    return SRPath(self.parentURL)
+  }
+  
+  public var extensionName: String {
+    return self.URL.pathExtension!
+  }
+  
+  public func trash() -> Bool {
 #if os(iOS)
-        return false
+    return false
 #else
-        do {
-            try NSFileManager.defaultManager().trashItemAtURL(self.URL, resultingItemURL: nil)
-        } catch {
-            return false
-        }
-    
-        return true
+    do {
+      try NSFileManager.defaultManager().trashItemAtURL(self.URL, resultingItemURL: nil)
+    } catch {
+      return false
+    }
+
+    return true
 #endif
-    }
+  }
+  
+  // move self to some directory
+  public func moveTo(path: SRPath) -> SRPath? {
+    guard path.isDirectory else { return nil }
     
-    // move self to some directory
-    public func moveTo(path: SRPath) -> SRPath? {
-        guard path.isDirectory else { return nil }
-        
-        let newURL = path.URL.URLByAppendingPathComponent(self.name)
-        do {
-            try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newURL)
-            return SRPath(newURL)
-        } catch {
-            return nil
-        }
+    let newURL = path.URL.URLByAppendingPathComponent(self.name)
+    do {
+      try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newURL)
+      return SRPath(newURL)
+    } catch {
+      return nil
     }
-    
-    public func rename(name: String) -> SRPath? {
-        let newPath = self.parentURL.URLByAppendingPathComponent(name)
-        do {
-            try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newPath)
-            return SRPath(newPath)
-        } catch {
-            return nil
-        }
+  }
+  
+  public func rename(name: String) -> SRPath? {
+    let newPath = self.parentURL.URLByAppendingPathComponent(name)
+    do {
+      try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newPath)
+      return SRPath(newPath)
+    } catch {
+      return nil
     }
-    
-    public func fileHandleForReading() -> SRFileHandle? {
-        if self.exists == false || self.isDirectory { return nil }
-        return SRFileHandle(pathForReading: self)
+  }
+  
+  public func fileHandleForReading() -> SRFileHandle? {
+    if self.exists == false || self.isDirectory { return nil }
+    return SRFileHandle(pathForReading: self)
+  }
+  
+  public func fileHandleForWriting() -> SRFileHandle? {
+    if self.exists == false {
+      SRPath.createFile(self)
+      return SRFileHandle(pathForWriting: self)
     }
-    
-    public func fileHandleForWriting() -> SRFileHandle? {
-        if self.exists == false {
-            SRPath.createFile(self)
-            return SRFileHandle(pathForWriting: self)
-        }
-        else if self.exists == true && self.isDirectory {
-            return nil
-        }
-        else {
-            return SRFileHandle(pathForWriting: self)
-        }
+    else if self.exists == true && self.isDirectory {
+      return nil
     }
-    
-    public func childPath(childContentName: String) -> SRPath {
-        let newURL = self.URL.URLByAppendingPathComponent(childContentName)
-        return SRPath(newURL)
+    else {
+      return SRFileHandle(pathForWriting: self)
     }
+  }
+  
+  // This is alternate function of file handle
+  // Ok. Is this needed? Or use file handle features?
+  public var lines: [String]? {
+    guard self.exists && self.isFile else { return nil }
+    return try? String(contentsOfURL: self.URL)
+      .characters
+      .split { $0 == "\n" }
+      .map(String.init)
+  }
     
-    // MARK: - Utilities
-    
-    private static func pathForUserDomain(directory: NSSearchPathDirectory) -> SRPath {
-        let paths = NSSearchPathForDirectoriesInDomains(directory, NSSearchPathDomainMask.UserDomainMask, true)
-        return SRPath(paths.last!)
-    }
-    
-    private static func pathURLForUserDomain(directory: NSSearchPathDirectory) -> NSURL {
-        let fm = NSFileManager.defaultManager()
-        let paths = fm.URLsForDirectory(directory, inDomains: NSSearchPathDomainMask.UserDomainMask)
-        return paths.last!
-    }
+  public func childPath(childContentName: String) -> SRPath {
+    let newURL = self.URL
+      .URLByAppendingPathComponent(childContentName)
+    return SRPath(newURL)
+  }
+  
+  // MARK: - Utilities
+  
+  private static func pathForUserDomain(directory: NSSearchPathDirectory) -> SRPath {
+    let paths = NSSearchPathForDirectoriesInDomains(
+      directory,
+      NSSearchPathDomainMask.UserDomainMask,
+      true)
+    return SRPath(paths.last!)
+  }
+  
+  private static func pathURLForUserDomain(directory: NSSearchPathDirectory) -> NSURL {
+    let fm = NSFileManager.defaultManager()
+    let paths = fm.URLsForDirectory(
+      directory,
+      inDomains: NSSearchPathDomainMask.UserDomainMask)
+    return paths.last!
+  }
     
 #if os(OSX)
-    public static var downloadsPath: SRPath {
-        return SRPath.pathForUserDomain(.DownloadsDirectory)
-    }
-    public static var downloadsURL: NSURL {
-        return SRPath.pathURLForUserDomain(.DownloadsDirectory)
-    }
-    
-    public static var moviesPath: SRPath {
-        return SRPath.pathForUserDomain(.MoviesDirectory)
-    }
-    public static var moviesURL: NSURL {
-        return SRPath.pathURLForUserDomain(.MoviesDirectory)
-    }
-    
-    public static var desktopPath: SRPath {
-        return SRPath.pathForUserDomain(.DesktopDirectory)
-    }
-    public static var desktopURL: NSURL {
-        return SRPath.pathURLForUserDomain(.DesktopDirectory)
-    }
-    
-    public static var homePath: SRPath {
-        let home = NSProcessInfo.processInfo().environment
-        let homePath: AnyObject? = home["HOME"]
-        return SRPath(homePath as! String)
-    }
-    public static var homeURL: NSURL {
-        return NSURL(fileURLWithPath: SRPath.homePath.string, isDirectory: true)
-    }
+  public static var downloadsPath: SRPath {
+    return SRPath.pathForUserDomain(.DownloadsDirectory)
+  }
+  public static var downloadsURL: NSURL {
+    return SRPath.pathURLForUserDomain(.DownloadsDirectory)
+  }
+  
+  public static var moviesPath: SRPath {
+    return SRPath.pathForUserDomain(.MoviesDirectory)
+  }
+  public static var moviesURL: NSURL {
+    return SRPath.pathURLForUserDomain(.MoviesDirectory)
+  }
+  
+  public static var desktopPath: SRPath {
+    return SRPath.pathForUserDomain(.DesktopDirectory)
+  }
+  public static var desktopURL: NSURL {
+    return SRPath.pathURLForUserDomain(.DesktopDirectory)
+  }
+  
+  public static var homePath: SRPath {
+    let home = NSProcessInfo.processInfo().environment
+    let homePath: AnyObject? = home["HOME"]
+    return SRPath(homePath as! String)
+  }
+  public static var homeURL: NSURL {
+    return NSURL(fileURLWithPath: SRPath.homePath.string, isDirectory: true)
+  }
 #endif  // #if os(OSX)
   
-    public static var applicationSupportsPath: SRPath {
-        return SRPath.pathForUserDomain(.ApplicationSupportDirectory)
-    }
-    public static var applicationSupportsURL: NSURL {
-        return SRPath.pathURLForUserDomain(.ApplicationSupportDirectory)
-    }
+  public static var applicationSupportsPath: SRPath {
+    return SRPath.pathForUserDomain(.ApplicationSupportDirectory)
+  }
+  public static var applicationSupportsURL: NSURL {
+    return SRPath.pathURLForUserDomain(.ApplicationSupportDirectory)
+  }
+  
+  public static var cachesPath: SRPath {
+    return SRPath.pathForUserDomain(.CachesDirectory)
+  }
+  public static var cachesURL: NSURL {
+    return SRPath.pathURLForUserDomain(.CachesDirectory)
+  }
+  
+  public static var documentsPath: SRPath {
+    return SRPath.pathForUserDomain(.DocumentDirectory)
+  }
+  public static var documentsURL: NSURL {
+    return SRPath.pathURLForUserDomain(.DocumentDirectory)
+  }
+  
+  public static var temporaryPath: SRPath {
+    return SRPath(NSTemporaryDirectory())
+  }
+  public static var temporaryURL: NSURL {
+    return NSURL(fileURLWithPath: SRPath.temporaryPath.string, isDirectory: true)
+  }
+  
+  public static var currentPath: SRPath {
+    return SRPath(NSFileManager.defaultManager().currentDirectoryPath)
+  }
+  public static var currentURL: NSURL {
+    return NSURL(fileURLWithPath: SRPath.currentPath.string, isDirectory: true)
+  }
     
-    public static var cachesPath: SRPath {
-        return SRPath.pathForUserDomain(.CachesDirectory)
+  public static var mainBundlePath: SRPath? {
+    guard let resourcePath = NSBundle.mainBundle().resourcePath
+      else { return nil }
+    return SRPath(resourcePath)
+  }
+  public static var mainBundleURL: NSURL? {
+    guard let path = SRPath.mainBundlePath else { return nil }
+    return NSURL(fileURLWithPath: path.string, isDirectory: true)
+  }
+  
+  public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> SRPath? {
+    do {
+      try _fm.createDirectoryAtPath(
+        pathString,
+        withIntermediateDirectories: intermediateDirectories,
+        attributes: nil)
+      return SRPath(pathString)
+    } catch {
+      return nil
     }
-    public static var cachesURL: NSURL {
-        return SRPath.pathURLForUserDomain(.CachesDirectory)
+  }
+  
+  public func mkdir(intermediateDirectories: Bool = false) -> SRPath? {
+    do {
+      try _fm.createDirectoryAtPath(
+        self.string,
+        withIntermediateDirectories: intermediateDirectories,
+        attributes: nil)
+      return self
+    } catch {
+      return nil
     }
+  }
     
-    public static var documentsPath: SRPath {
-        return SRPath.pathForUserDomain(.DocumentDirectory)
+  public func mkdir(path: SRPath, intermediateDirectories: Bool = false) -> SRPath? {
+    return SRPath.mkdir(
+      path.string,
+      intermediateDirectories: intermediateDirectories)
+  }
+  
+  public static func mv(fromPath: SRPath, toPath: SRPath) -> Bool {
+    do {
+      try NSFileManager.defaultManager()
+        .moveItemAtURL(fromPath.URL, toURL: toPath.URL)
+      return true
+    } catch {
+      return false
     }
-    public static var documentsURL: NSURL {
-        return SRPath.pathURLForUserDomain(.DocumentDirectory)
-    }
-    
-    public static var temporaryPath: SRPath {
-        return SRPath(NSTemporaryDirectory())
-    }
-    public static var temporaryURL: NSURL {
-        return NSURL(fileURLWithPath: SRPath.temporaryPath.string, isDirectory: true)
-    }
-    
-    public static var currentPath: SRPath {
-        return SRPath(NSFileManager.defaultManager().currentDirectoryPath)
-    }
-    public static var currentURL: NSURL {
-        return NSURL(fileURLWithPath: SRPath.currentPath.string, isDirectory: true)
-    }
-    
-    public static var mainBundlePath: SRPath? {
-        guard let resourcePath = NSBundle.mainBundle().resourcePath
-            else { return nil }
-        return SRPath(resourcePath)
-    }
-    public static var mainBundleURL: NSURL? {
-        guard let path = SRPath.mainBundlePath else { return nil }
-        return NSURL(fileURLWithPath: path.string, isDirectory: true)
-    }
-    
-    public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> SRPath? {
-        do {
-            try _fm.createDirectoryAtPath(pathString, withIntermediateDirectories: intermediateDirectories, attributes: nil)
-            return SRPath(pathString)
-        } catch {
-            return nil
-        }
-    }
-    
-    public func mkdir(intermediateDirectories: Bool = false) -> SRPath? {
-        do {
-            try _fm.createDirectoryAtPath(self.string, withIntermediateDirectories: intermediateDirectories, attributes: nil)
-            return self
-        } catch {
-            return nil
-        }
-    }
-    
-    public func mkdir(path: SRPath, intermediateDirectories: Bool = false) -> SRPath? {
-        return SRPath.mkdir(path.string, intermediateDirectories: intermediateDirectories)
-    }
-    
-    public static func mv(fromPath: SRPath, toPath: SRPath) -> Bool {
-        do {
-            try NSFileManager.defaultManager().moveItemAtURL(fromPath.URL, toURL: toPath.URL)
-            return true
-        } catch {
-            return false
-        }
-    }
-    
-    public static func createFile(path: SRPath) -> Bool {
-        return _fm.createFileAtPath(path.string, contents: nil, attributes: nil)
-    }
-    
-    // MARK: - String Convertible
-    
-    public var description: String {
-        return self.string
-    }
-    
-    public var debugDescription: String {
-        return "SRPath(\(self.string))"
-    }
+  }
+  
+  public static func createFile(path: SRPath) -> Bool {
+    return _fm.createFileAtPath(path.string, contents: nil, attributes: nil)
+  }
+  
+  // MARK: - String Convertible
+  
+  public var description: String {
+    return self.string
+  }
+  
+  public var debugDescription: String {
+    return "SRPath(\(self.string))"
+  }
 }
 
 // MARK: - Operators
 
 public func == (left: SRPath, right: SRPath) -> Bool {
-    return left.string == right.string
+  return left.string == right.string
 }
 
 public func + (left: SRPath, right: String) -> SRPath {
-    assert(left.isDirectory, "lvalue is not directory")
-    return left.childPath(right)
+  assert(left.isDirectory, "lvalue is not directory")
+  return left.childPath(right)
 }
 
 // MARK: - Helper Functions
 
 public func dir(URL: NSURL = NSURL(fileURLWithPath: "./")) -> [SRPath] {
-    return SRPath(URL).contents
+  return SRPath(URL).contents
 }
 
 public func dir(pathString: String = "./") -> [SRPath] {
-    return dir(NSURL(fileURLWithPath: pathString))
+  return dir(NSURL(fileURLWithPath: pathString))
 }
