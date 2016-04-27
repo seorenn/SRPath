@@ -88,145 +88,148 @@ class SRPathTests: XCTestCase {
     }
     
     func testCreateAndRemove() {
-        let path = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest")
-        //let dir = SRPath(creatingDirectoryURL: path, intermediateDirectories: false)
-        let dir = SRPath(path).mkdir()
-        XCTAssertNotNil(dir)
-        XCTAssertTrue(dir!.trash())
-        XCTAssertFalse(dir!.exists)
+      let path = SRPath.documentsPath + "SRDirectoryTest"
+      let dir = path.mkdir(intermediateDirectories: false)
+      XCTAssertNotNil(dir)
+      XCTAssertTrue(dir!.trash())
+      XCTAssertFalse(dir!.exists)
     }
     
     func testCreateAndRemoveWithIntermediation() {
-        let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest/Another/Deep/Directory")
-        let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
-        XCTAssertNotNil(dir)
-        XCTAssertTrue(dir!.exists)
-        
-        let removingPath = SRPath.documentsPath.string.stringByAppendingPathComponent("SRDirectoryTest")
-        let remDir = SRPath(removingPath)
-        XCTAssertTrue(remDir.trash())
-        XCTAssertFalse(remDir.exists)
+      let path = SRPath.documentsPath + "SRDirectoryTest/Another/Deep/Directory"
+      let dir = path.mkdir(intermediateDirectories: true)
+      XCTAssertNotNil(dir)
+      XCTAssertTrue(dir!.exists)
+      
+      let removingPath = SRPath.documentsPath + "SRDirectoryTest"
+      XCTAssertTrue(removingPath.trash())
+      XCTAssertFalse(removingPath.exists)
     }
     
     func testRename() {
-        let url = SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryTest-Previous")
-        let dir = SRPath.mkdir(url.path!, intermediateDirectories: true)
-        XCTAssertNotNil(dir)
-        let renamedFile = dir!.rename("SRDirectoryTest-New")!
-        XCTAssertEqual(renamedFile.name, "SRDirectoryTest-New")
-        XCTAssertTrue(renamedFile.exists)
+      let path = SRPath.documentsPath + "SRDirectoryTest-Previous"
+      path.mkdir(intermediateDirectories: true)
+      XCTAssertTrue(path.exists)
+      
+      let renamedFile = path.rename("SRDirectoryTest-New")!
+      XCTAssertEqual(renamedFile.name, "SRDirectoryTest-New")
+      XCTAssertTrue(renamedFile.exists)
         
-        renamedFile.trash()
+      renamedFile.trash()
     }
     
     func testMove() {
-        let oldContainer = SRPath.mkdir(SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer1").path!, intermediateDirectories: true)!
+      let oldContainer = SRPath.documentsPath + "SRDirectoryContainer1"
+      oldContainer.mkdir(intermediateDirectories: true)
+      
+      let content = oldContainer + "content-dir"
+      content.mkdir(intermediateDirectories: true)
+      XCTAssertTrue(content.isDirectory)
+      
+      let newContainer = SRPath.documentsPath + "SRDirectoryContainer2"
+      newContainer.mkdir(intermediateDirectories: true)
+      XCTAssertTrue(newContainer.isDirectory)
         
-        let content = oldContainer.childPath("content-dir").mkdir(true)!
-        //let content = SRPath.mkdir(oldContainer.childPath("content-dir").string, intermediateDirectories: true)!
+      let movedFile = content.moveTo(newContainer)!
+      XCTAssertEqual(movedFile.string.stringByDeletingLastPathComponent.lastPathComponent, "SRDirectoryContainer2")
         
-        let newContainer = SRPath.mkdir(SRPath.documentsURL.URLByAppendingPathComponent("SRDirectoryContainer2").path!, intermediateDirectories: true)!
-        XCTAssertTrue(newContainer.isDirectory)
+      XCTAssertEqual(oldContainer.contents.count, 0)
+      XCTAssertEqual(newContainer.contents.count, 1)
         
-        let movedFile = content.moveTo(newContainer)!
-        XCTAssertEqual(movedFile.string.stringByDeletingLastPathComponent.lastPathComponent, "SRDirectoryContainer2")
+      oldContainer.trash()
+      newContainer.trash()
         
-        XCTAssertEqual(oldContainer.directories.count, 0)
-        
-        XCTAssertEqual(newContainer.directories.count, 1)
-        
-        oldContainer.trash()
-        newContainer.trash()
-        
-        XCTAssertFalse(oldContainer.exists)
-        XCTAssertFalse(newContainer.exists)
+      XCTAssertFalse(oldContainer.exists)
+      XCTAssertFalse(newContainer.exists)
     }
     
     func testHidden() {
-        let file = SRPath("/foo/bar/.hidden")
-        XCTAssertTrue(file.isHidden)
+      let file = SRPath("/foo/bar/.hidden")
+      XCTAssertTrue(file.isHidden)
     }
     
     func testStringConvertible() {
-        let file = SRPath("/Some/Special/File")
-        XCTAssertEqual(String(file), "/Some/Special/File")
+      let file = SRPath("/Some/Special/File")
+      XCTAssertEqual(String(file), "/Some/Special/File")
     }
     
     func testSizeString() {
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1025)), "1KB")
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.5KB")
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024)), "1MB")
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024)), "1GB")
-        XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024 * 1024)), "1TB")
+      XCTAssertEqual(HumanReadableFileSize(UInt64(1025)), "1KB")
+      XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.5KB")
+      XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024)), "1MB")
+      XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024)), "1GB")
+      XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024 * 1024)), "1TB")
     }
     
     func testFileHandleOperation() {
-        let dateString = currentTimeString()
-        let filename = "SRPathTest-\(dateString).txt"
-        let path = SRPath.documentsPath.string.stringByAppendingPathComponent(filename)
-        let testContent = "This\nis\ntest content.\nEOF"
+      let dateString = currentTimeString()
+      let filename = "SRPathTest-\(dateString).txt"
+      let path = SRPath.documentsPath.string.stringByAppendingPathComponent(filename)
+      let testContent = "This\nis\ntest content.\nEOF"
+      
+      let f = SRPath(path)
+      
+      // Write the file with text content
+      
+      if let fp = f.fileHandleForWriting() {
+          let data = testContent.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)
+          XCTAssertNotNil(data)
+          fp.write(data!)
+          fp.close()
         
-        let f = SRPath(path)
-        
-        // Write the file with text content
-        
-        if let fp = f.fileHandleForWriting() {
-            let data = testContent.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)
-            XCTAssertNotNil(data)
-            fp.write(data!)
-            fp.close()
-        } else {
-            XCTFail()
-        }
-        
-        XCTAssertEqual(f.size, 25)
-        XCTAssertEqual(f.humanReadableSize, "25B")
-        
-        let today = NSDate()
-        XCTAssertTrue(isEqualDate(today, right: f.creationDate!))
-        XCTAssertTrue(isEqualDate(today, right: f.modificationDate!))
-        
-        // Read file's content and compare with it!
-        
-        if let fin = f.fileHandleForReading() {
-            if let readedData = fin.read() {
-                let readedContent = NSString(data: readedData, encoding: NSUTF8StringEncoding) as! String
-                XCTAssertEqual(readedContent, testContent)
-            } else {
-                XCTFail()
-            }
-            
-            fin.close()
-        } else {
-            XCTFail()
-        }
-        
-        // Testing readline and readlines!
-        
-        if let finput = f.fileHandleForReading() {
-            let components = testContent.componentsSeparatedByString("\n")
-            var index = 0
-            while let line = finput.readline() {
-                XCTAssertEqual(line, components[index])
-                index += 1
-            }
-            
-            finput.close()
-        }
-        
-        if let finpall = f.fileHandleForReading() {
-            let components = testContent.componentsSeparatedByString("\n")
-            let lines = finpall.readlines()
-            
-            XCTAssertEqual(components.count, lines.count)
-            var index = 0
-            
-            for line in lines {
-                XCTAssert(line == components[index])
-                index += 1
-            }
-        } else {
-            XCTFail()
-        }
+        XCTAssertTrue(f.isFile)
+      } else {
+          XCTFail()
+      }
+      
+      XCTAssertEqual(f.size, 25)
+      XCTAssertEqual(f.humanReadableSize, "25B")
+      
+      let today = NSDate()
+      XCTAssertTrue(isEqualDate(today, right: f.creationDate!))
+      XCTAssertTrue(isEqualDate(today, right: f.modificationDate!))
+      
+      // Read file's content and compare with it!
+      
+      if let fin = f.fileHandleForReading() {
+          if let readedData = fin.read() {
+              let readedContent = NSString(data: readedData, encoding: NSUTF8StringEncoding) as! String
+              XCTAssertEqual(readedContent, testContent)
+          } else {
+              XCTFail()
+          }
+          
+          fin.close()
+      } else {
+          XCTFail()
+      }
+      
+      // Testing readline and readlines!
+      
+      if let finput = f.fileHandleForReading() {
+          let components = testContent.componentsSeparatedByString("\n")
+          var index = 0
+          while let line = finput.readline() {
+              XCTAssertEqual(line, components[index])
+              index += 1
+          }
+          
+          finput.close()
+      }
+      
+      if let finpall = f.fileHandleForReading() {
+          let components = testContent.componentsSeparatedByString("\n")
+          let lines = finpall.readlines()
+          
+          XCTAssertEqual(components.count, lines.count)
+          var index = 0
+          
+          for line in lines {
+              XCTAssert(line == components[index])
+              index += 1
+          }
+      } else {
+          XCTFail()
+      }
     }
 }

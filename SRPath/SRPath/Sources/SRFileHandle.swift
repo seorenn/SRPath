@@ -24,39 +24,39 @@ public class SRFileHandle: CustomDebugStringConvertible {
     private let delimiter = "\n".dataUsingEncoding(NSUTF8StringEncoding)!
 
     public var eof: Bool {
-        return eofValue
+      return eofValue
     }
 
     public init?(pathForReading: SRPath) {
-        self.path = pathForReading
-        self.mode = .Read
-        
-        do {
-            let h = try NSFileHandle(forReadingFromURL: self.path.URL)
-            self.handle = h
-            self.eofValue = false
-        }
-        catch {
-            return nil
-        }
+      self.path = pathForReading
+      self.mode = .Read
+      
+      if let handle = NSFileHandle(forReadingAtPath: self.path.string) {
+        self.handle = handle
+        self.eofValue = false
+      } else {
+        return nil
+      }
     }
     
     public init?(pathForWriting: SRPath) {
-        self.path = pathForWriting
-        self.mode = .Write
+      self.path = pathForWriting
+      self.mode = .Write
 
-        if let h = try? NSFileHandle(forWritingToURL: self.path.URL) {
-            self.handle = h
+      if let handle = NSFileHandle(forWritingAtPath: self.path.string) {
+        self.handle = handle
+      } else {
+        // Failed to get writer handle.
+        // Ok. It meanns file not exists, maybe...
+        NSFileManager.defaultManager().createFileAtPath(self.path.string, contents: nil, attributes: nil)
+        if let handle = NSFileHandle(forWritingAtPath: self.path.string) {
+          self.handle = handle
         } else {
-            NSFileManager.defaultManager().createFileAtPath(self.path.string, contents: nil, attributes: nil)
-            if let h = try? NSFileHandle(forWritingToURL: self.path.URL) {
-                self.handle = h
-            } else {
-                return nil
-            }
+          return nil
         }
-        
-        self.eofValue = false
+      }
+      
+      self.eofValue = false
     }
 
     deinit {

@@ -20,6 +20,42 @@ private extension String {
   private var firstCharacter: Character {
     return self[self.startIndex]
   }
+  private var lastCharacter: Character {
+    return self[self.endIndex.predecessor()]
+  }
+  private var safePathString: String {
+    if self.characters.count <= 0 { return self }
+    if self.lastCharacter == "/" {
+      let toIndex = self.endIndex.predecessor().predecessor()
+      return self[self.startIndex...toIndex]
+    } else {
+      return self
+    }
+  }
+  
+  private func stringBackwardBeforeCharacter(character: Character) -> String {
+    if self.characters.count <= 0 { return self }
+    var index = self.endIndex.predecessor()
+    while index != self.startIndex {
+      if self[index] == character {
+        let toIndex = index.successor()
+        return self[toIndex..<self.endIndex]
+      }
+      index = index.predecessor()
+    }
+    return self
+  }
+  private func stringBackwardRemovedBeforeCharacter(character: Character) -> String {
+    if self.characters.count <= 0 { return self }
+    var index = self.endIndex.predecessor()
+    while index != self.startIndex {
+      if self[index] == character {
+        return self[startIndex..<index]
+      }
+      index = index.predecessor()
+    }
+    return self
+  }
 }
 
 private extension Double {
@@ -66,22 +102,19 @@ public protocol SRPathType {
 }
 
 public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDebugStringConvertible {
-  public let URL: NSURL
-  
-  public var string: String {
-    return self.URL.path!
-  }
+  public let string: String
+  public var URL: NSURL { return NSURL(fileURLWithPath: self.string) }
 
   public init(_ URL: NSURL) {
-    self.URL = URL
+    self.string = URL.path!
   }
   
   public init(_ pathString: String) {
-    self.init(NSURL(fileURLWithPath: pathString))
+    self.string = pathString.safePathString
   }
   
   public init(_ path: SRPath) {
-    self.init(path.URL)
+    self.init(path.string)
   }
   
   public var contents: [SRPath] {
@@ -91,12 +124,9 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     
     let fm = NSFileManager.defaultManager()
     do {
-      let urls = try fm.contentsOfDirectoryAtURL(
-        self.URL,
-        includingPropertiesForKeys: nil,
-        options: [])
-      let result: [SRPath] = urls.map {
-        return SRPath($0)
+      let pathStrings = try fm.contentsOfDirectoryAtPath(self.string)
+      let result: [SRPath] = pathStrings.map {
+          return SRPath($0)
       }
       return result
     } catch {
@@ -110,10 +140,11 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
   
   public var isDirectory: Bool {
     var isDir: ObjCBool = false
-    let exists = _fm.fileExistsAtPath(self.string, isDirectory: &isDir)
-    
-    if !exists { return false }
-    return isDir.boolValue
+    if NSFileManager.defaultManager().fileExistsAtPath(self.string, isDirectory: &isDir) {
+      return isDir.boolValue
+    } else {
+      return false
+    }
   }
   
   public var isFile: Bool {
@@ -170,22 +201,19 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
   }
   
   public var name: String {
-    return self.URL.lastPathComponent!
+    return self.string.stringBackwardBeforeCharacter(Character("/"))
   }
   
-  public var parentURL: NSURL {
-    return self.URL.URLByDeletingLastPathComponent!
-  }
   public var parentPathString: String {
-    return self.parentURL.path!
+    return self.string.stringBackwardRemovedBeforeCharacter(Character("/"))
   }
   public var parentPath: SRPath? {
-    if self.URL.isRootDirectory { return nil }
-    return SRPath(self.parentURL)
+    if self.string == "/" || self.string == "" { return nil }
+    return SRPath(self.parentPathString)
   }
   
   public var extensionName: String {
-    return self.URL.pathExtension!
+    return self.name.stringBackwardBeforeCharacter(Character("."))
   }
   
   public func trash() -> Bool {
@@ -206,20 +234,28 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
   public func moveTo(path: SRPath) -> SRPath? {
     guard path.isDirectory else { return nil }
     
-    let newURL = path.URL.URLByAppendingPathComponent(self.name)
+    let destinationPath = path + self.name
+    
     do {
-      try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newURL)
-      return SRPath(newURL)
+      try NSFileManager.defaultManager().moveItemAtPath(self.string, toPath: destinationPath.string)
+      return destinationPath
     } catch {
       return nil
     }
   }
   
   public func rename(name: String) -> SRPath? {
-    let newPath = self.parentURL.URLByAppendingPathComponent(name)
+    let newPath: SRPath
+    
+    if let parentPath = self.parentPath {
+      newPath = parentPath + name
+    } else {
+      newPath = SRPath("/" + name)
+    }
+
     do {
-      try NSFileManager.defaultManager().moveItemAtURL(self.URL, toURL: newPath)
-      return SRPath(newPath)
+      try NSFileManager.defaultManager().moveItemAtPath(self.string, toPath: newPath.string)
+      return newPath
     } catch {
       return nil
     }
@@ -254,9 +290,7 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
   }
     
   public func childPath(childContentName: String) -> SRPath {
-    let newURL = self.URL
-      .URLByAppendingPathComponent(childContentName)
-    return SRPath(newURL)
+    return SRPath(self.string + "/" + childContentName)
   }
   
   // MARK: - Utilities
@@ -269,34 +303,17 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     return SRPath(paths.last!)
   }
   
-  private static func pathURLForUserDomain(directory: NSSearchPathDirectory) -> NSURL {
-    let fm = NSFileManager.defaultManager()
-    let paths = fm.URLsForDirectory(
-      directory,
-      inDomains: NSSearchPathDomainMask.UserDomainMask)
-    return paths.last!
-  }
-    
 #if os(OSX)
   public static var downloadsPath: SRPath {
     return SRPath.pathForUserDomain(.DownloadsDirectory)
-  }
-  public static var downloadsURL: NSURL {
-    return SRPath.pathURLForUserDomain(.DownloadsDirectory)
   }
   
   public static var moviesPath: SRPath {
     return SRPath.pathForUserDomain(.MoviesDirectory)
   }
-  public static var moviesURL: NSURL {
-    return SRPath.pathURLForUserDomain(.MoviesDirectory)
-  }
   
   public static var desktopPath: SRPath {
     return SRPath.pathForUserDomain(.DesktopDirectory)
-  }
-  public static var desktopURL: NSURL {
-    return SRPath.pathURLForUserDomain(.DesktopDirectory)
   }
   
   public static var homePath: SRPath {
@@ -304,54 +321,32 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     let homePath: AnyObject? = home["HOME"]
     return SRPath(homePath as! String)
   }
-  public static var homeURL: NSURL {
-    return NSURL(fileURLWithPath: SRPath.homePath.string, isDirectory: true)
-  }
 #endif  // #if os(OSX)
   
   public static var applicationSupportsPath: SRPath {
     return SRPath.pathForUserDomain(.ApplicationSupportDirectory)
   }
-  public static var applicationSupportsURL: NSURL {
-    return SRPath.pathURLForUserDomain(.ApplicationSupportDirectory)
-  }
   
   public static var cachesPath: SRPath {
     return SRPath.pathForUserDomain(.CachesDirectory)
-  }
-  public static var cachesURL: NSURL {
-    return SRPath.pathURLForUserDomain(.CachesDirectory)
   }
   
   public static var documentsPath: SRPath {
     return SRPath.pathForUserDomain(.DocumentDirectory)
   }
-  public static var documentsURL: NSURL {
-    return SRPath.pathURLForUserDomain(.DocumentDirectory)
-  }
   
   public static var temporaryPath: SRPath {
     return SRPath(NSTemporaryDirectory())
-  }
-  public static var temporaryURL: NSURL {
-    return NSURL(fileURLWithPath: SRPath.temporaryPath.string, isDirectory: true)
   }
   
   public static var currentPath: SRPath {
     return SRPath(NSFileManager.defaultManager().currentDirectoryPath)
   }
-  public static var currentURL: NSURL {
-    return NSURL(fileURLWithPath: SRPath.currentPath.string, isDirectory: true)
-  }
-    
+  
   public static var mainBundlePath: SRPath? {
     guard let resourcePath = NSBundle.mainBundle().resourcePath
       else { return nil }
     return SRPath(resourcePath)
-  }
-  public static var mainBundleURL: NSURL? {
-    guard let path = SRPath.mainBundlePath else { return nil }
-    return NSURL(fileURLWithPath: path.string, isDirectory: true)
   }
   
   public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> SRPath? {
@@ -366,7 +361,7 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     }
   }
   
-  public func mkdir(intermediateDirectories: Bool = false) -> SRPath? {
+  public func mkdir(intermediateDirectories intermediateDirectories: Bool) -> SRPath? {
     do {
       try _fm.createDirectoryAtPath(
         self.string,
@@ -377,17 +372,10 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
       return nil
     }
   }
-    
-  public func mkdir(path: SRPath, intermediateDirectories: Bool = false) -> SRPath? {
-    return SRPath.mkdir(
-      path.string,
-      intermediateDirectories: intermediateDirectories)
-  }
   
   public static func mv(fromPath: SRPath, toPath: SRPath) -> Bool {
     do {
-      try NSFileManager.defaultManager()
-        .moveItemAtURL(fromPath.URL, toURL: toPath.URL)
+      try NSFileManager.defaultManager().moveItemAtPath(fromPath.string, toPath: toPath.string)
       return true
     } catch {
       return false
@@ -416,16 +404,16 @@ public func == (left: SRPath, right: SRPath) -> Bool {
 }
 
 public func + (left: SRPath, right: String) -> SRPath {
-  assert(left.isDirectory, "lvalue is not directory")
+  assert(left.isDirectory, "lvalue is must directory")
   return left.childPath(right)
 }
 
 // MARK: - Helper Functions
 
 public func dir(URL: NSURL = NSURL(fileURLWithPath: "./")) -> [SRPath] {
-  return SRPath(URL).contents
+  return SRPath(URL.path!).contents
 }
 
 public func dir(pathString: String = "./") -> [SRPath] {
-  return dir(NSURL(fileURLWithPath: pathString))
+  return SRPath(pathString).contents
 }
