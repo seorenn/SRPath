@@ -135,6 +135,7 @@ class SRPathTests: XCTestCase {
         
       XCTAssertEqual(oldContainer.contents.count, 0)
       XCTAssertEqual(newContainer.contents.count, 1)
+      XCTAssertEqual(newContainer.directories.count, 1)
         
       oldContainer.trash()
       newContainer.trash()

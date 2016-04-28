@@ -126,7 +126,7 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
     do {
       let pathStrings = try fm.contentsOfDirectoryAtPath(self.string)
       let result: [SRPath] = pathStrings.map {
-          return SRPath($0)
+          return self + $0
       }
       return result
     } catch {
