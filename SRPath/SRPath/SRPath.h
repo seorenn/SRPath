@@ -6,7 +6,7 @@
 //  Copyright © 2016년 Seorenn. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for SRPath.
 FOUNDATION_EXPORT double SRPathVersionNumber;

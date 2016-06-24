@@ -42,7 +42,7 @@
 		8A96B47B1C9C350D002E8627 /* SRPathTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SRPathTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A96B4801C9C350D002E8627 /* SRPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPathTests.swift; sourceTree = "<group>"; };
 		8A96B4821C9C350D002E8627 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8A96B4941C9C3563002E8627 /* SRPath iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "SRPath iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A96B4941C9C3563002E8627 /* SRPath.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SRPath.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A96B4971C9C3689002E8627 /* SRFileHandle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SRFileHandle.swift; sourceTree = "<group>"; };
 		8A96B4981C9C3689002E8627 /* SRPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SRPath.swift; sourceTree = "<group>"; };
 		8A96B49A1C9C3689002E8627 /* SRPathEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SRPathEvent.swift; sourceTree = "<group>"; };
@@ -92,7 +92,7 @@
 			children = (
 				8A96B4711C9C350C002E8627 /* SRPath.framework */,
 				8A96B47B1C9C350D002E8627 /* SRPathTests.xctest */,
-				8A96B4941C9C3563002E8627 /* SRPath iOS.framework */,
+				8A96B4941C9C3563002E8627 /* SRPath.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -213,7 +213,7 @@
 			);
 			name = "SRPath iOS";
 			productName = SRPath;
-			productReference = 8A96B4941C9C3563002E8627 /* SRPath iOS.framework */;
+			productReference = 8A96B4941C9C3563002E8627 /* SRPath.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -470,6 +470,7 @@
 		8A96B4921C9C3563002E8627 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -480,7 +481,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.seorenn.SRPath;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = SRPath;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
@@ -490,6 +491,7 @@
 		8A96B4931C9C3563002E8627 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -500,7 +502,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.seorenn.SRPath;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = SRPath;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
@@ -526,6 +528,7 @@
 				8A96B4871C9C350D002E8627 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		8A96B4881C9C350D002E8627 /* Build configuration list for PBXNativeTarget "SRPathTests" */ = {
 			isa = XCConfigurationList;
@@ -534,6 +537,7 @@
 				8A96B48A1C9C350D002E8627 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		8A96B4911C9C3563002E8627 /* Build configuration list for PBXNativeTarget "SRPath iOS" */ = {
 			isa = XCConfigurationList;
