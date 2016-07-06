@@ -326,7 +326,7 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
   }
 #endif  // #if os(OSX)
   
-  public static var applicationSupportsPath: SRPath {
+  public static var applicationSupportPath: SRPath {
     return SRPath.pathForUserDomain(.ApplicationSupportDirectory)
   }
   

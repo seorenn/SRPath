@@ -59,6 +59,10 @@ class SRPathTests: XCTestCase {
     super.tearDown()
   }
   
+  func test00LogPredefines() {
+    print("Application Support Path: \(SRPath.applicationSupportPath)")
+  }
+  
   func testMisc() {
     let dir = SRPath("/not/exists/path")
     XCTAssertFalse(dir.exists)
