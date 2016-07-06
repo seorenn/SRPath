@@ -327,7 +327,10 @@ public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDeb
 #endif  // #if os(OSX)
   
   public static var applicationSupportPath: SRPath {
-    return SRPath.pathForUserDomain(.ApplicationSupportDirectory)
+    let appSupportDir = SRPath.pathForUserDomain(.ApplicationSupportDirectory)
+    
+    guard let executableName = NSBundle.mainBundle().infoDictionary!["CFBundleExecutable"] as? String else { return appSupportDir }
+    return appSupportDir + executableName
   }
   
   public static var cachesPath: SRPath {
