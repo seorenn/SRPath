@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8A96B48B1C9C3563002E8627"
-               BuildableName = "SRPath iOS.framework"
+               BuildableName = "SRPath.framework"
                BlueprintName = "SRPath iOS"
                ReferencedContainer = "container:SRPath.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8A96B48B1C9C3563002E8627"
-            BuildableName = "SRPath iOS.framework"
+            BuildableName = "SRPath.framework"
             BlueprintName = "SRPath iOS"
             ReferencedContainer = "container:SRPath.xcodeproj">
          </BuildableReference>
@@ -64,7 +64,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8A96B48B1C9C3563002E8627"
-            BuildableName = "SRPath iOS.framework"
+            BuildableName = "SRPath.framework"
             BlueprintName = "SRPath iOS"
             ReferencedContainer = "container:SRPath.xcodeproj">
          </BuildableReference>

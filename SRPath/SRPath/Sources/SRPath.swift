@@ -34,25 +34,28 @@ private extension String {
   }
   
   private func stringBackwardBeforeCharacter(character: Character) -> String {
-    if self.characters.count <= 0 { return self }
-    var index = self.endIndex.predecessor()
-    while index != self.startIndex {
+    if characters.count <= 0 { return self }
+    
+    var index = endIndex.predecessor()
+    while index >= startIndex {
       if self[index] == character {
         let toIndex = index.successor()
-        return self[toIndex..<self.endIndex]
+        return self[toIndex..<endIndex]
       }
-      index = index.predecessor()
+      if index > startIndex { index = index.predecessor() }
+      else { break }
     }
-    return self
+    return ""
   }
   private func stringBackwardRemovedBeforeCharacter(character: Character) -> String {
-    if self.characters.count <= 0 { return self }
-    var index = self.endIndex.predecessor()
-    while index != self.startIndex {
+    if characters.count <= 0 { return self }
+    var index = endIndex.predecessor()
+    while index >= startIndex {
       if self[index] == character {
         return self[startIndex..<index]
       }
-      index = index.predecessor()
+      if index > startIndex { index = index.predecessor() }
+      else { break }
     }
     return self
   }
