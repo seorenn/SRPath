@@ -96,15 +96,7 @@ func HumanReadableFileSize(size: UInt64) -> String {
   return teraBytes.firstDecisionString + "TB"
 }
 
-// TODO: It may be the common type ;-)
-public protocol SRPathType {
-  var exists: Bool { get }
-  var name: String { get }
-  var extensionName: String { get }
-  var isDirectory: Bool { get }
-}
-
-public struct SRPath : SRPathType, Equatable, CustomStringConvertible, CustomDebugStringConvertible {
+public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConvertible {
   public let string: String
   public var URL: NSURL { return NSURL(fileURLWithPath: self.string) }
 
