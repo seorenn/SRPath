@@ -256,6 +256,19 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     }
   }
   
+  public func copy(toPath: SRPath) -> Bool {
+    guard exists && isFile else { return false }
+    guard NSFileManager.defaultManager().isReadableFileAtPath(string) else { return false }
+
+    do {
+      try NSFileManager.defaultManager().copyItemAtPath(string, toPath: toPath.string)
+      return true
+    }
+    catch {
+      return false
+    }
+  }
+  
   public func fileHandleForReading() -> SRFileHandle? {
     if self.exists == false || self.isDirectory { return nil }
     return SRFileHandle(pathForReading: self)
