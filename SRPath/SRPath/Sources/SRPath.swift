@@ -202,6 +202,13 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     return self.string.stringBackwardBeforeCharacter(Character("/"))
   }
   
+  public var nameWithoutExtension: String {
+    let n = self.name.stringBackwardRemovedBeforeCharacter(".")
+    if n.isEmpty { return name }  // case naming hidden file
+    
+    return n
+  }
+  
   public var parentPathString: String {
     return self.string.stringBackwardRemovedBeforeCharacter(Character("/"))
   }

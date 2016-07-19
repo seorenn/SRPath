@@ -158,6 +158,11 @@ class SRPathTests: XCTestCase {
     XCTAssertEqual(SRPath("/foo/bar/test/file2.png").extensionName, "png")
     XCTAssertEqual(SRPath("/foo/bar/test.file.has.many.ext").extensionName, "ext")
     XCTAssertEqual(SRPath("/foo/bar/.another_dir").extensionName, "another_dir")
+    
+    XCTAssertEqual(SRPath("/boo/bar/some1.txt").nameWithoutExtension, "some1")
+    XCTAssertEqual(SRPath("/boo/bar/some2").nameWithoutExtension, "some2")
+    XCTAssertEqual(SRPath("/foo/bar/.hidden").nameWithoutExtension, ".hidden")
+    XCTAssertEqual(SRPath("/foo/bar/.anotherhidden.txt").nameWithoutExtension, ".anotherhidden")
   }
   
   func testStringConvertible() {
