@@ -10,17 +10,17 @@ import XCTest
 @testable import SRPath
 
 func currentTimeString() -> String {
-  let formatter = NSDateFormatter()
+  let formatter = DateFormatter()
   formatter.dateFormat = "yyyy-MM-ddTHH:mm:ss"
-  formatter.timeZone = NSTimeZone.defaultTimeZone()
+  formatter.timeZone = TimeZone.default
   
-  return formatter.stringFromDate(NSDate())
+  return formatter.string(from: Date())
 }
 
-func isEqualDate(left: NSDate, right: NSDate) -> Bool {
-  guard let calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierGregorian) else { return false }
-  let leftComponents = calendar.components([ .Year, .Month, .Day ], fromDate: left)
-  let rightComponents = calendar.components([ .Year, .Month, .Day ], fromDate: right)
+func isEqualDate(_ left: Date, right: Date) -> Bool {
+  guard let calendar = Calendar(calendarIdentifier: Calendar.Identifier.gregorian) else { return false }
+  let leftComponents = calendar.components([ .year, .month, .day ], from: left)
+  let rightComponents = calendar.components([ .year, .month, .day ], from: right)
   
   return leftComponents.year == rightComponents.year && leftComponents.month == rightComponents.month && leftComponents.day == rightComponents.day
 }
@@ -31,7 +31,7 @@ private extension String {
   }
   
   var stringByDeletingLastPathComponent: String {
-    return (self as NSString).stringByDeletingLastPathComponent
+    return (self as NSString).deletingLastPathComponent
   }
   
   var pathExtension: String {
@@ -39,11 +39,11 @@ private extension String {
   }
   
   var stringByDeletingPathExtension: String {
-    return (self as NSString).stringByDeletingPathExtension
+    return (self as NSString).deletingPathExtension
   }
   
-  func stringByAppendingPathComponent(component: String) -> String {
-    return (self as NSString).stringByAppendingPathComponent(component)
+  func stringByAppendingPathComponent(_ component: String) -> String {
+    return (self as NSString).appendingPathComponent(component)
   }
 }
 
@@ -112,37 +112,37 @@ class SRPathTests: XCTestCase {
   
   func testRename() {
     let path = SRPath.documentsPath + "SRDirectoryTest-Previous"
-    path.mkdir(intermediateDirectories: true)
+    XCTAssertNotNil(path.mkdir(intermediateDirectories: true))
     XCTAssertTrue(path.exists)
     
-    let renamedFile = path.rename("SRDirectoryTest-New")!
+    let renamedFile = path.rename(name: "SRDirectoryTest-New")!
     XCTAssertEqual(renamedFile.name, "SRDirectoryTest-New")
     XCTAssertTrue(renamedFile.exists)
     
-    renamedFile.trash()
+    XCTAssertTrue(renamedFile.trash())
   }
   
   func testMove() {
     let oldContainer = SRPath.documentsPath + "SRDirectoryContainer1"
-    oldContainer.mkdir(intermediateDirectories: true)
+    XCTAssertNotNil(oldContainer.mkdir(intermediateDirectories: true))
     
     let content = oldContainer + "content-dir"
-    content.mkdir(intermediateDirectories: true)
+    XCTAssertNotNil(content.mkdir(intermediateDirectories: true))
     XCTAssertTrue(content.isDirectory)
     
     let newContainer = SRPath.documentsPath + "SRDirectoryContainer2"
-    newContainer.mkdir(intermediateDirectories: true)
+    XCTAssertNotNil(newContainer.mkdir(intermediateDirectories: true))
     XCTAssertTrue(newContainer.isDirectory)
     
-    let movedFile = content.moveTo(newContainer)!
+    let movedFile = content.moveTo(path: newContainer)!
     XCTAssertEqual(movedFile.string.stringByDeletingLastPathComponent.lastPathComponent, "SRDirectoryContainer2")
     
     XCTAssertEqual(oldContainer.contents.count, 0)
     XCTAssertEqual(newContainer.contents.count, 1)
     XCTAssertEqual(newContainer.directories.count, 1)
     
-    oldContainer.trash()
-    newContainer.trash()
+    XCTAssertTrue(oldContainer.trash())
+    XCTAssertTrue(newContainer.trash())
     
     XCTAssertFalse(oldContainer.exists)
     XCTAssertFalse(newContainer.exists)
@@ -171,11 +171,11 @@ class SRPathTests: XCTestCase {
   }
   
   func testSizeString() {
-    XCTAssertEqual(HumanReadableFileSize(UInt64(1025)), "1KB")
-    XCTAssertEqual(HumanReadableFileSize(UInt64(1458)), "1.5KB")
-    XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024)), "1MB")
-    XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024)), "1GB")
-    XCTAssertEqual(HumanReadableFileSize(UInt64(1024 * 1024 * 1024 * 1024)), "1TB")
+    XCTAssertEqual(HumanReadableFileSize(size: Int64(1025)), "1KB")
+    XCTAssertEqual(HumanReadableFileSize(size: Int64(1458)), "1.5KB")
+    XCTAssertEqual(HumanReadableFileSize(size: Int64(1024 * 1024)), "1MB")
+    XCTAssertEqual(HumanReadableFileSize(size: Int64(1024 * 1024 * 1024)), "1GB")
+    XCTAssertEqual(HumanReadableFileSize(size: Int64(1024 * 1024 * 1024 * 1024)), "1TB")
   }
   
   func testFileHandleOperation() {
@@ -189,7 +189,7 @@ class SRPathTests: XCTestCase {
     // Write the file with text content
     
     if let fp = f.fileHandleForWriting() {
-      let data = testContent.dataUsingEncoding(NSUTF8StringEncoding, allowLossyConversion: false)
+      let data = testContent.data(using: String.Encoding.utf8, allowLossyConversion: false)
       XCTAssertNotNil(data)
       fp.write(data!)
       fp.close()
@@ -202,15 +202,15 @@ class SRPathTests: XCTestCase {
     XCTAssertEqual(f.size, 25)
     XCTAssertEqual(f.humanReadableSize, "25B")
     
-    let today = NSDate()
-    XCTAssertTrue(isEqualDate(today, right: f.creationDate!))
-    XCTAssertTrue(isEqualDate(today, right: f.modificationDate!))
+    let today = Date()
+    XCTAssertTrue(isEqualDate(today, right: f.creationDate! as Date))
+    XCTAssertTrue(isEqualDate(today, right: f.modificationDate! as Date))
     
     // Read file's content and compare with it!
     
     if let fin = f.fileHandleForReading() {
       if let readedData = fin.read() {
-        let readedContent = NSString(data: readedData, encoding: NSUTF8StringEncoding) as! String
+        let readedContent = NSString(data: readedData, encoding: String.Encoding.utf8.rawValue) as! String
         XCTAssertEqual(readedContent, testContent)
       } else {
         XCTFail()
@@ -224,7 +224,7 @@ class SRPathTests: XCTestCase {
     // Testing readline and readlines!
     
     if let finput = f.fileHandleForReading() {
-      let components = testContent.componentsSeparatedByString("\n")
+      let components = testContent.components(separatedBy: "\n")
       var index = 0
       while let line = finput.readline() {
         XCTAssertEqual(line, components[index])
@@ -235,7 +235,7 @@ class SRPathTests: XCTestCase {
     }
     
     if let finpall = f.fileHandleForReading() {
-      let components = testContent.componentsSeparatedByString("\n")
+      let components = testContent.components(separatedBy: "\n")
       let lines = finpall.readlines()
       
       XCTAssertEqual(components.count, lines.count)

@@ -8,7 +8,6 @@
 
 import Foundation
 
-private let _fm = FileManager.default()
 private let SRFileHandleChunkSize = 1024
 
 public enum SRFileHandleMode {
@@ -48,7 +47,7 @@ public class SRFileHandle: CustomDebugStringConvertible {
     } else {
       // Failed to get writer handle.
       // Ok. It meanns file not exists, maybe...
-      FileManager.default().createFile(atPath: self.path.string, contents: nil, attributes: nil)
+      FileManager.default.createFile(atPath: self.path.string, contents: nil, attributes: nil)
       if let handle = FileHandle(forWritingAtPath: self.path.string) {
         self.handle = handle
       } else {
@@ -69,11 +68,11 @@ public class SRFileHandle: CustomDebugStringConvertible {
   
   public var data: Data? {
     get {
-      return _fm.contents(atPath: self.path.string)
+      return FileManager.default.contents(atPath: self.path.string)
     }
     set {
       if newValue != nil {
-        try! newValue!.write(to: URL(fileURLWithPath: self.path.string), options: [.dataWritingAtomic])
+        try! newValue!.write(to: URL(fileURLWithPath: self.path.string), options: [.atomicWrite])
       }
     }
   }

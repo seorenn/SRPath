@@ -20,13 +20,13 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
   public var delegate: SRPathMonitorDelegate?
   public var monitorDeepFile: Bool = false
   
-  private let queue: dispatch_queue_t
+  private let queue: DispatchQueue
   private let impl: SRPathMonitorImpl
   private let paths: [String]
   
-  public init(pathStrings: [String], queue: dispatch_queue_t?, delegate: SRPathMonitorDelegate?) {
+  public init(pathStrings: [String], queue: DispatchQueue?, delegate: SRPathMonitorDelegate?) {
     if queue != nil { self.queue = queue! }
-    else            { self.queue = dispatch_get_main_queue() }
+    else            { self.queue = DispatchQueue.main }
     
     self.delegate = delegate
     self.paths = pathStrings
@@ -35,11 +35,11 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
     self.impl.delegate = self
   }
   
-  public convenience init(paths: [SRPath], queue: dispatch_queue_t?, delegate: SRPathMonitorDelegate?) {
+  public convenience init(paths: [SRPath], queue: DispatchQueue?, delegate: SRPathMonitorDelegate?) {
     self.init(pathStrings: paths.map { $0.string }, queue: queue, delegate: delegate)
   }
   
-  public convenience init(path: SRPath, queue: dispatch_queue_t?, delegate: SRPathMonitorDelegate?) {
+  public convenience init(path: SRPath, queue: DispatchQueue?, delegate: SRPathMonitorDelegate?) {
     self.init(pathStrings: [path.string], queue: queue, delegate: delegate)
   }
   
@@ -59,24 +59,25 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
     }
   }
   
-  private func countPathItem(path: String) -> Int {
+  private func countItem(path: String) -> Int {
     if path.characters.count <= 0 || path == "/" { return 0 }
-    let items = path.componentsSeparatedByString("/")
+    let items = path.components(separatedBy: "/")
     return items.count - 1
   }
   
-  private func depthOfPath(path: String) -> Int? {
-    for targetPath in self.paths {
-      if path.rangeOfString(targetPath) != nil {
-        let arrPath = path.stringByReplacingOccurrencesOfString(targetPath, withString: "")
-        return self.countPathItem(arrPath)
+  private func depthOf(path: String) -> Int? {
+    for targetPath in paths {
+      if path.range(of: targetPath) != nil {
+      //if path.rangeOfString(targetPath) != nil {
+        let arrPath = path.replacingOccurrences(of: targetPath, with: "")
+        return countItem(path: arrPath)
       }
     }
     
     return nil
   }
   
-  @objc public func pathMonitorImpl(fileMonitorImpl: SRPathMonitorImpl, detectEventPaths paths: [String], flags: [NSNumber]) {
+  @objc public func pathMonitorImpl(_ fileMonitorImpl: SRPathMonitorImpl, detectEventPaths paths: [String], flags: [NSNumber]) {
     let eventFlags = flags as! [Int]
     
     assert(paths.count == eventFlags.count)
@@ -87,7 +88,7 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
       let flag = eventFlags[i]
       
       if self.monitorDeepFile == false {
-        let depth = self.depthOfPath(path)
+        let depth = self.depthOf(path: path)
         if depth != nil && depth! > 1 { continue }
       }
       
@@ -96,7 +97,7 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
     }
     
     if let delegate = self.delegate {
-      delegate.pathMonitor(self, detectEvents: events)
+      delegate.pathMonitor(pathMonitor: self, detectEvents: events)
     }
   }
 }
