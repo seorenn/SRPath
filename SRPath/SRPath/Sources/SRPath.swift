@@ -8,7 +8,7 @@
 
 import Foundation
 
-private let _fm = NSFileManager.defaultManager()
+private let _fm = FileManager.default()
 
 private extension NSURL {
   private var isRootDirectory: Bool {
@@ -18,16 +18,16 @@ private extension NSURL {
 
 private extension String {
   private var firstCharacter: Character {
-    return self[self.startIndex]
+    return self[startIndex]
   }
   private var lastCharacter: Character {
-    return self[self.endIndex.predecessor()]
+    return self[index(before: endIndex)]
   }
   private var safePathString: String {
-    if self.characters.count <= 0 { return self }
-    if self.lastCharacter == "/" {
-      let toIndex = self.endIndex.predecessor().predecessor()
-      return self[self.startIndex...toIndex]
+    if characters.count <= 0 { return self }
+    if lastCharacter == "/" {
+      let toIndex = index(before: index(before: endIndex))
+      return self[startIndex...toIndex]
     } else {
       return self
     }
@@ -36,25 +36,26 @@ private extension String {
   private func stringBackwardBeforeCharacter(character: Character) -> String {
     if characters.count <= 0 { return self }
     
-    var index = endIndex.predecessor()
-    while index >= startIndex {
-      if self[index] == character {
-        let toIndex = index.successor()
+    var i = index(before: endIndex)
+    while i >= startIndex {
+      print("index: \(i)")
+      if self[i] == character {
+        let toIndex = index(after: i)
         return self[toIndex..<endIndex]
       }
-      if index > startIndex { index = index.predecessor() }
+      if i > startIndex { i = index(before: i) }
       else { break }
     }
     return ""
   }
   private func stringBackwardRemovedBeforeCharacter(character: Character) -> String {
     if characters.count <= 0 { return self }
-    var index = endIndex.predecessor()
-    while index >= startIndex {
-      if self[index] == character {
-        return self[startIndex..<index]
+    var i = index(before: endIndex)
+    while i >= startIndex {
+      if self[i] == character {
+        return self[startIndex..<i]
       }
-      if index > startIndex { index = index.predecessor() }
+      if i > startIndex { i = index(before: i) }
       else { break }
     }
     return self
@@ -113,13 +114,13 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var contents: [SRPath] {
-    guard self.isDirectory == true else {
+    guard isDirectory == true else {
       return [SRPath]()
     }
     
-    let fm = NSFileManager.defaultManager()
+    let fm = FileManager.default()
     do {
-      let pathStrings = try fm.contentsOfDirectoryAtPath(self.string)
+      let pathStrings = try fm.contentsOfDirectory(atPath: string)
       let result: [SRPath] = pathStrings.map {
           return self + $0
       }
@@ -130,12 +131,12 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var exists: Bool {
-    return NSFileManager.defaultManager().fileExistsAtPath(self.string)
+    return FileManager.default().fileExists(atPath: string)
   }
   
   public var isDirectory: Bool {
     var isDir: ObjCBool = false
-    if NSFileManager.defaultManager().fileExistsAtPath(self.string, isDirectory: &isDir) {
+    if FileManager.default().fileExists(atPath: string, isDirectory: &isDir) {
       return isDir.boolValue
     } else {
       return false
@@ -154,13 +155,15 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     // Directory has no size
     guard self.exists else { return nil }
     
-    return try! NSFileManager.defaultManager()
-      .attributesOfItemAtPath(self.string)
+    return try! FileManager.default().attributesOfItem(atPath: string)
   }
   
   public var size: UInt64? {
     guard self.isFile else { return nil }
-    guard let attrs = self.attributes else { return nil }
+    guard let ats = attributes else { return nil }
+    
+    return ats[FileAttributeKey.size].longLongValue
+    guard let sizeObject = attrs[(FileAttributeKey.size)] else { return nil }
     
     return UInt64(attrs[NSFileSize]!.longLongValue)
   }

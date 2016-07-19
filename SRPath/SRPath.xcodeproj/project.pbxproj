@@ -232,6 +232,9 @@
 					8A96B47A1C9C350D002E8627 = {
 						CreatedOnToolsVersion = 7.2.1;
 					};
+					8A96B48B1C9C3563002E8627 = {
+						LastSwiftMigration = 0800;
+					};
 				};
 			};
 			buildConfigurationList = 8A96B46B1C9C350C002E8627 /* Build configuration list for PBXProject "SRPath" */;
@@ -485,6 +488,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -506,6 +510,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
