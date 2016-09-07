@@ -9,7 +9,7 @@
 import XCTest
 @testable import SRPath
 
-func currentTimeString() -> String {
+fileprivate func currentTimeString() -> String {
   let formatter = DateFormatter()
   formatter.dateFormat = "yyyy-MM-ddTHH:mm:ss"
   formatter.timeZone = TimeZone.current
@@ -17,7 +17,7 @@ func currentTimeString() -> String {
   return formatter.string(from: Date())
 }
 
-func isEqualDate(_ left: Date, right: Date) -> Bool {
+fileprivate func isEqualDate(_ left: Date, right: Date) -> Bool {
   let calendar = Calendar(identifier: Calendar.Identifier.gregorian)
   let leftComponents = calendar.dateComponents([ .year, .month, .day ], from: left)
   let rightComponents = calendar.dateComponents([ .year, .month, .day ], from: right)
@@ -25,24 +25,24 @@ func isEqualDate(_ left: Date, right: Date) -> Bool {
   return leftComponents.year == rightComponents.year && leftComponents.month == rightComponents.month && leftComponents.day == rightComponents.day
 }
 
-private extension String {
-  var lastPathComponent: String {
+fileprivate extension String {
+  fileprivate var lastPathComponent: String {
     return (self as NSString).lastPathComponent
   }
   
-  var stringByDeletingLastPathComponent: String {
+  fileprivate var stringByDeletingLastPathComponent: String {
     return (self as NSString).deletingLastPathComponent
   }
   
-  var pathExtension: String {
+  fileprivate var pathExtension: String {
     return (self as NSString).pathExtension
   }
   
-  var stringByDeletingPathExtension: String {
+  fileprivate var stringByDeletingPathExtension: String {
     return (self as NSString).deletingPathExtension
   }
   
-  func stringByAppendingPathComponent(_ component: String) -> String {
+  fileprivate func stringByAppendingPathComponent(_ component: String) -> String {
     return (self as NSString).appendingPathComponent(component)
   }
 }
