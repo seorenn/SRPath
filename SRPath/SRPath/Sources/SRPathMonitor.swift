@@ -78,7 +78,7 @@ public class SRPathMonitor: SRPathMonitorImplDelegate {
   }
   
   @objc public func pathMonitorImpl(_ fileMonitorImpl: SRPathMonitorImpl, detectEventPaths paths: [String], flags: [NSNumber]) {
-    let eventFlags = flags as! [Int]
+    let eventFlags = flags as [Int]
     
     assert(paths.count == eventFlags.count)
     

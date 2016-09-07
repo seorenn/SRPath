@@ -113,7 +113,7 @@ public class SRFileHandle: CustomDebugStringConvertible {
       let r = buffer.range(of: delimiter, options: NSData.SearchOptions(rawValue: 0), in: NSMakeRange(0, buffer.length))
       if r.location == NSNotFound {
         let newChunk = self.read(SRFileHandleChunkSize)
-        if newChunk == nil || newChunk?.count <= 0 {
+        if newChunk == nil || newChunk!.count <= 0 {
           eofValue = true
           
           if buffer.length > 0 {

@@ -8,20 +8,20 @@
 
 import Foundation
 
-private extension NSURL {
-  private var isRootDirectory: Bool {
+extension NSURL {
+  var isRootDirectory: Bool {
     return self.path! == "/"
   }
 }
 
-private extension String {
-  private var firstCharacter: Character {
+extension String {
+  var firstCharacter: Character {
     return self[startIndex]
   }
-  private var lastCharacter: Character {
+  var lastCharacter: Character {
     return self[index(before: endIndex)]
   }
-  private var safePathString: String {
+  var safePathString: String {
     if characters.count <= 0 { return self }
     if lastCharacter == "/" {
       let toIndex = index(before: index(before: endIndex))
@@ -31,7 +31,7 @@ private extension String {
     }
   }
   
-  private func stringBackwardBefore(character: Character) -> String {
+  func stringBackwardBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
     
     var i = index(before: endIndex)
@@ -46,7 +46,7 @@ private extension String {
     }
     return ""
   }
-  private func stringBackwardRemovedBefore(character: Character) -> String {
+  func stringBackwardRemovedBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
     var i = index(before: endIndex)
     while i >= startIndex {
@@ -60,8 +60,8 @@ private extension String {
   }
 }
 
-private extension Double {
-  private var firstDecisionString: String {
+extension Double {
+  var firstDecisionString: String {
     let fraction = self - Double(Int(self))
     if fraction >= 0.1 {
       return String(format: "%.1f", self)
@@ -148,7 +148,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     return self.name.firstCharacter == Character(".")
   }
   
-  public var attributes: [FileAttributeKey : AnyObject]? {
+  public var attributes: [FileAttributeKey : Any]? {
     // Directory has no size
     guard self.exists else { return nil }
     
@@ -159,7 +159,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     guard self.isFile else { return nil }
     guard let attrs = attributes else { return nil }
     
-    return attrs[FileAttributeKey.size]?.longLongValue
+    return (attrs[FileAttributeKey.size] as! NSNumber).int64Value
   }
   
   public var modificationDate: NSDate? {
@@ -333,8 +333,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   
   public static var homePath: SRPath {
     let home = ProcessInfo.processInfo.environment
-    let homePath: AnyObject? = home["HOME"]
-    return SRPath(homePath as! String)
+    return SRPath(home["HOME"]!)
   }
 #endif  // #if os(OSX)
   

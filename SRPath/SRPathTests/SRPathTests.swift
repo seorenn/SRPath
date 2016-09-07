@@ -12,15 +12,15 @@ import XCTest
 func currentTimeString() -> String {
   let formatter = DateFormatter()
   formatter.dateFormat = "yyyy-MM-ddTHH:mm:ss"
-  formatter.timeZone = TimeZone.default
+  formatter.timeZone = TimeZone.current
   
   return formatter.string(from: Date())
 }
 
 func isEqualDate(_ left: Date, right: Date) -> Bool {
-  guard let calendar = Calendar(calendarIdentifier: Calendar.Identifier.gregorian) else { return false }
-  let leftComponents = calendar.components([ .year, .month, .day ], from: left)
-  let rightComponents = calendar.components([ .year, .month, .day ], from: right)
+  let calendar = Calendar(identifier: Calendar.Identifier.gregorian)
+  let leftComponents = calendar.dateComponents([ .year, .month, .day ], from: left)
+  let rightComponents = calendar.dateComponents([ .year, .month, .day ], from: right)
   
   return leftComponents.year == rightComponents.year && leftComponents.month == rightComponents.month && leftComponents.day == rightComponents.day
 }
@@ -167,7 +167,7 @@ class SRPathTests: XCTestCase {
   
   func testStringConvertible() {
     let file = SRPath("/Some/Special/File")
-    XCTAssertEqual(String(file), "/Some/Special/File")
+    XCTAssertEqual(String(describing: file), "/Some/Special/File")
   }
   
   func testSizeString() {
