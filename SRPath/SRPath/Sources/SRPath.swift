@@ -8,20 +8,20 @@
 
 import Foundation
 
-extension NSURL {
+fileprivate extension URL {
   var isRootDirectory: Bool {
-    return self.path! == "/"
+    return self.path == "/"
   }
 }
 
-extension String {
-  var firstCharacter: Character {
+fileprivate extension String {
+  fileprivate var firstCharacter: Character {
     return self[startIndex]
   }
-  var lastCharacter: Character {
+  fileprivate var lastCharacter: Character {
     return self[index(before: endIndex)]
   }
-  var safePathString: String {
+  fileprivate var safePathString: String {
     if characters.count <= 0 { return self }
     if lastCharacter == "/" {
       let toIndex = index(before: index(before: endIndex))
@@ -31,7 +31,7 @@ extension String {
     }
   }
   
-  func stringBackwardBefore(character: Character) -> String {
+  fileprivate func stringBackwardBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
     
     var i = index(before: endIndex)
@@ -46,7 +46,7 @@ extension String {
     }
     return ""
   }
-  func stringBackwardRemovedBefore(character: Character) -> String {
+  fileprivate func stringBackwardRemovedBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
     var i = index(before: endIndex)
     while i >= startIndex {
@@ -60,8 +60,8 @@ extension String {
   }
 }
 
-extension Double {
-  var firstDecisionString: String {
+fileprivate extension Double {
+  fileprivate var firstDecisionString: String {
     let fraction = self - Double(Int(self))
     if fraction >= 0.1 {
       return String(format: "%.1f", self)
@@ -71,7 +71,7 @@ extension Double {
   }
 }
 
-func HumanReadableFileSize(size: Int64) -> String {
+internal func HumanReadableFileSize(size: Int64) -> String {
   if size < 1000 { return "\(size)B" }
   
   let fSize = Double(size)
