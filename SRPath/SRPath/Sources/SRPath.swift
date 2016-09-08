@@ -14,6 +14,12 @@ fileprivate extension URL {
   }
 }
 
+public extension URL {
+  init(path: SRPath) {
+    self.init(fileURLWithPath: path.string)
+  }
+}
+
 fileprivate extension String {
   fileprivate var firstCharacter: Character {
     return self[startIndex]
@@ -97,10 +103,9 @@ internal func HumanReadableFileSize(size: Int64) -> String {
 
 public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConvertible {
   public let string: String
-  public var URL: NSURL { return NSURL(fileURLWithPath: self.string) }
 
-  public init(_ URL: NSURL) {
-    self.string = URL.path!
+  public init(_ url: NSURL) {
+    self.string = url.path!
   }
   
   public init(_ pathString: String) {
@@ -220,7 +225,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     return false
 #else
     do {
-      try FileManager.default.trashItem(at: self.URL as URL, resultingItemURL: nil)
+      try FileManager.default.trashItem(at: URL(path: self), resultingItemURL: nil)
     } catch {
       return false
     }
