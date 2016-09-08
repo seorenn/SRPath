@@ -104,8 +104,8 @@ internal func HumanReadableFileSize(size: Int64) -> String {
 public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConvertible {
   public let string: String
 
-  public init(_ url: NSURL) {
-    self.string = url.path!
+  public init(_ url: URL) {
+    self.string = url.path
   }
   
   public init(_ pathString: String) {
