@@ -223,14 +223,19 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = Seorenn;
 				TargetAttributes = {
 					8A96B4701C9C350C002E8627 = {
 						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
 					};
 					8A96B47A1C9C350D002E8627 = {
 						CreatedOnToolsVersion = 7.2.1;
+						LastSwiftMigration = 0800;
+					};
+					8A96B48B1C9C3563002E8627 = {
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -423,6 +428,7 @@
 				PRODUCT_NAME = SRPath;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -442,6 +448,8 @@
 				PRODUCT_NAME = SRPath;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -453,6 +461,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.seorenn.SRPathTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -464,6 +473,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.seorenn.SRPathTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
@@ -485,6 +496,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -506,6 +518,8 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/SRPath/Sources";
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};

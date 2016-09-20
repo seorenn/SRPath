@@ -8,61 +8,66 @@
 
 import Foundation
 
-private let _fm = NSFileManager.defaultManager()
-
-private extension NSURL {
-  private var isRootDirectory: Bool {
-    return self.path! == "/"
+fileprivate extension URL {
+  var isRootDirectory: Bool {
+    return self.path == "/"
   }
 }
 
-private extension String {
-  private var firstCharacter: Character {
-    return self[self.startIndex]
+public extension URL {
+  init(path: SRPath) {
+    self.init(fileURLWithPath: path.string)
   }
-  private var lastCharacter: Character {
-    return self[self.endIndex.predecessor()]
+}
+
+fileprivate extension String {
+  fileprivate var firstCharacter: Character {
+    return self[startIndex]
   }
-  private var safePathString: String {
-    if self.characters.count <= 0 { return self }
-    if self.lastCharacter == "/" {
-      let toIndex = self.endIndex.predecessor().predecessor()
-      return self[self.startIndex...toIndex]
+  fileprivate var lastCharacter: Character {
+    return self[index(before: endIndex)]
+  }
+  fileprivate var safePathString: String {
+    if characters.count <= 0 { return self }
+    if lastCharacter == "/" {
+      let toIndex = index(before: index(before: endIndex))
+      return self[startIndex...toIndex]
     } else {
       return self
     }
   }
   
-  private func stringBackwardBeforeCharacter(character: Character) -> String {
+  fileprivate func stringBackwardBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
     
-    var index = endIndex.predecessor()
-    while index >= startIndex {
-      if self[index] == character {
-        let toIndex = index.successor()
+    var i = index(before: endIndex)
+    while i >= startIndex {
+      print("index: \(i)")
+      if self[i] == character {
+        let toIndex = index(after: i)
         return self[toIndex..<endIndex]
       }
-      if index > startIndex { index = index.predecessor() }
+      if i > startIndex { i = index(before: i) }
       else { break }
     }
     return ""
   }
-  private func stringBackwardRemovedBeforeCharacter(character: Character) -> String {
+  fileprivate func stringBackwardRemovedBefore(character: Character) -> String {
     if characters.count <= 0 { return self }
-    var index = endIndex.predecessor()
-    while index >= startIndex {
-      if self[index] == character {
-        return self[startIndex..<index]
+    var i = index(before: endIndex)
+    while i >= startIndex {
+      if self[i] == character {
+        return self[startIndex..<i]
       }
-      if index > startIndex { index = index.predecessor() }
+      if i > startIndex { i = index(before: i) }
       else { break }
     }
     return self
   }
 }
 
-private extension Double {
-  private var firstDecisionString: String {
+fileprivate extension Double {
+  fileprivate var firstDecisionString: String {
     let fraction = self - Double(Int(self))
     if fraction >= 0.1 {
       return String(format: "%.1f", self)
@@ -72,7 +77,7 @@ private extension Double {
   }
 }
 
-func HumanReadableFileSize(size: UInt64) -> String {
+internal func HumanReadableFileSize(size: Int64) -> String {
   if size < 1000 { return "\(size)B" }
   
   let fSize = Double(size)
@@ -98,10 +103,9 @@ func HumanReadableFileSize(size: UInt64) -> String {
 
 public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConvertible {
   public let string: String
-  public var URL: NSURL { return NSURL(fileURLWithPath: self.string) }
 
-  public init(_ URL: NSURL) {
-    self.string = URL.path!
+  public init(_ url: URL) {
+    self.string = url.path
   }
   
   public init(_ pathString: String) {
@@ -113,13 +117,12 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var contents: [SRPath] {
-    guard self.isDirectory == true else {
+    guard isDirectory == true else {
       return [SRPath]()
     }
     
-    let fm = NSFileManager.defaultManager()
     do {
-      let pathStrings = try fm.contentsOfDirectoryAtPath(self.string)
+      let pathStrings = try FileManager.default.contentsOfDirectory(atPath: string)
       let result: [SRPath] = pathStrings.map {
           return self + $0
       }
@@ -130,12 +133,12 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var exists: Bool {
-    return NSFileManager.defaultManager().fileExistsAtPath(self.string)
+    return FileManager.default.fileExists(atPath: string)
   }
   
   public var isDirectory: Bool {
     var isDir: ObjCBool = false
-    if NSFileManager.defaultManager().fileExistsAtPath(self.string, isDirectory: &isDir) {
+    if FileManager.default.fileExists(atPath: string, isDirectory: &isDir) {
       return isDir.boolValue
     } else {
       return false
@@ -150,26 +153,25 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     return self.name.firstCharacter == Character(".")
   }
   
-  public var attributes: [String: AnyObject]? {
+  public var attributes: [FileAttributeKey : Any]? {
     // Directory has no size
     guard self.exists else { return nil }
     
-    return try! NSFileManager.defaultManager()
-      .attributesOfItemAtPath(self.string)
+    return try! FileManager.default.attributesOfItem(atPath: string)
   }
   
-  public var size: UInt64? {
+  public var size: Int64? {
     guard self.isFile else { return nil }
-    guard let attrs = self.attributes else { return nil }
+    guard let attrs = attributes else { return nil }
     
-    return UInt64(attrs[NSFileSize]!.longLongValue)
+    return (attrs[FileAttributeKey.size] as! NSNumber).int64Value
   }
   
   public var modificationDate: NSDate? {
     guard self.isFile else { return nil }
     guard let attrs = self.attributes else { return nil }
     
-    let date = attrs[NSFileModificationDate] as! NSDate
+    let date = attrs[FileAttributeKey.modificationDate] as! NSDate
     return date
   }
   
@@ -177,14 +179,14 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     guard self.isFile else { return nil }
     guard let attrs = self.attributes else { return nil }
     
-    let date = attrs[NSFileCreationDate] as! NSDate
+    let date = attrs[FileAttributeKey.creationDate] as! NSDate
     return date
   }
   
   public var humanReadableSize: String? {
     guard let size = self.size else { return nil }
     
-    return HumanReadableFileSize(size)
+    return HumanReadableFileSize(size: size)
   }
   
   public var files: [SRPath] {
@@ -196,18 +198,18 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var name: String {
-    return self.string.stringBackwardBeforeCharacter(Character("/"))
+    return self.string.stringBackwardBefore(character: "/")
   }
   
   public var nameWithoutExtension: String {
-    let n = self.name.stringBackwardRemovedBeforeCharacter(".")
+    let n = self.name.stringBackwardRemovedBefore(character: ".")
     if n.isEmpty { return name }  // case naming hidden file
     
     return n
   }
   
   public var parentPathString: String {
-    return self.string.stringBackwardRemovedBeforeCharacter(Character("/"))
+    return self.string.stringBackwardRemovedBefore(character: "/")
   }
   public var parentPath: SRPath? {
     if self.string == "/" || self.string == "" { return nil }
@@ -215,7 +217,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public var extensionName: String {
-    return self.name.stringBackwardBeforeCharacter(Character("."))
+    return self.name.stringBackwardBefore(character: ".")
   }
   
   public func trash() -> Bool {
@@ -223,7 +225,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     return false
 #else
     do {
-      try NSFileManager.defaultManager().trashItemAtURL(self.URL, resultingItemURL: nil)
+      try FileManager.default.trashItem(at: URL(path: self), resultingItemURL: nil)
     } catch {
       return false
     }
@@ -239,7 +241,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     let destinationPath = path + self.name
     
     do {
-      try NSFileManager.defaultManager().moveItemAtPath(self.string, toPath: destinationPath.string)
+      try FileManager.default.moveItem(atPath: self.string, toPath: destinationPath.string)
       return destinationPath
     } catch {
       return nil
@@ -256,7 +258,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     }
 
     do {
-      try NSFileManager.defaultManager().moveItemAtPath(self.string, toPath: newPath.string)
+      try FileManager.default.moveItem(atPath: self.string, toPath: newPath.string)
       return newPath
     } catch {
       return nil
@@ -265,10 +267,10 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   
   public func copy(toPath: SRPath) -> Bool {
     guard exists && isFile else { return false }
-    guard NSFileManager.defaultManager().isReadableFileAtPath(string) else { return false }
+    guard FileManager.default.isReadableFile(atPath: string) else { return false }
 
     do {
-      try NSFileManager.defaultManager().copyItemAtPath(string, toPath: toPath.string)
+      try FileManager.default.copyItem(atPath: string, toPath: toPath.string)
       return true
     }
     catch {
@@ -283,8 +285,11 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   
   public func fileHandleForWriting() -> SRFileHandle? {
     if self.exists == false {
-      SRPath.createFile(self)
-      return SRFileHandle(pathForWriting: self)
+      if SRPath.createFile(path: self) {
+        return SRFileHandle(pathForWriting: self)
+      } else {
+        return nil
+      }
     }
     else if self.exists == true && self.isDirectory {
       return nil
@@ -298,7 +303,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   // Ok. Is this needed? Or use file handle features?
   public var lines: [String]? {
     guard self.exists && self.isFile else { return nil }
-    return try? String(contentsOfURL: self.URL)
+    return try? String(contentsOfFile: string)
       .characters
       .split { $0 == "\n" }
       .map(String.init)
@@ -310,47 +315,46 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   
   // MARK: - Utilities
   
-  private static func pathForUserDomain(directory: NSSearchPathDirectory) -> SRPath {
+  private static func pathForUserDomain(directory: FileManager.SearchPathDirectory) -> SRPath {
     let paths = NSSearchPathForDirectoriesInDomains(
       directory,
-      NSSearchPathDomainMask.UserDomainMask,
+      FileManager.SearchPathDomainMask.userDomainMask,
       true)
     return SRPath(paths.last!)
   }
   
 #if os(OSX)
   public static var downloadsPath: SRPath {
-    return SRPath.pathForUserDomain(.DownloadsDirectory)
+    return SRPath.pathForUserDomain(directory: .downloadsDirectory)
   }
   
   public static var moviesPath: SRPath {
-    return SRPath.pathForUserDomain(.MoviesDirectory)
+    return SRPath.pathForUserDomain(directory: .moviesDirectory)
   }
   
   public static var desktopPath: SRPath {
-    return SRPath.pathForUserDomain(.DesktopDirectory)
+    return SRPath.pathForUserDomain(directory: .desktopDirectory)
   }
   
   public static var homePath: SRPath {
-    let home = NSProcessInfo.processInfo().environment
-    let homePath: AnyObject? = home["HOME"]
-    return SRPath(homePath as! String)
+    let home = ProcessInfo.processInfo.environment
+    return SRPath(home["HOME"]!)
   }
 #endif  // #if os(OSX)
   
   public static var applicationSupportPath: SRPath {
-    let appSupportDir = SRPath.pathForUserDomain(.ApplicationSupportDirectory)
+    let appSupportDir = SRPath.pathForUserDomain(directory: .applicationSupportDirectory)
     
-    guard let executableName = NSBundle.mainBundle().infoDictionary!["CFBundleExecutable"] as? String else { return appSupportDir }
+    guard let executableName = Bundle.main.infoDictionary!["CFBundleExecutable"] as? String else { return appSupportDir }
     return appSupportDir + executableName
   }
   
   public static var cachesPath: SRPath {
-    return SRPath.pathForUserDomain(.CachesDirectory)
+    return SRPath.pathForUserDomain(directory: .cachesDirectory)
   }
   
   public static var documentsPath: SRPath {
-    return SRPath.pathForUserDomain(.DocumentDirectory)
+    return SRPath.pathForUserDomain(directory: .documentDirectory)
   }
   
   public static var temporaryPath: SRPath {
@@ -358,19 +362,19 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public static var currentPath: SRPath {
-    return SRPath(NSFileManager.defaultManager().currentDirectoryPath)
+    return SRPath(FileManager.default.currentDirectoryPath)
   }
   
   public static var mainBundlePath: SRPath? {
-    guard let resourcePath = NSBundle.mainBundle().resourcePath
+    guard let resourcePath = Bundle.main.resourcePath
       else { return nil }
     return SRPath(resourcePath)
   }
   
   public static func mkdir(pathString: String, intermediateDirectories: Bool = false) -> SRPath? {
     do {
-      try _fm.createDirectoryAtPath(
-        pathString,
+      try FileManager.default.createDirectory(
+        atPath: pathString,
         withIntermediateDirectories: intermediateDirectories,
         attributes: nil)
       return SRPath(pathString)
@@ -379,10 +383,10 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
     }
   }
   
-  public func mkdir(intermediateDirectories intermediateDirectories: Bool) -> SRPath? {
+  public func mkdir(intermediateDirectories: Bool) -> SRPath? {
     do {
-      try _fm.createDirectoryAtPath(
-        self.string,
+      try FileManager.default.createDirectory(
+        atPath: self.string,
         withIntermediateDirectories: intermediateDirectories,
         attributes: nil)
       return self
@@ -393,7 +397,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   
   public static func mv(fromPath: SRPath, toPath: SRPath) -> Bool {
     do {
-      try NSFileManager.defaultManager().moveItemAtPath(fromPath.string, toPath: toPath.string)
+      try FileManager.default.moveItem(atPath: fromPath.string, toPath: toPath.string)
       return true
     } catch {
       return false
@@ -401,7 +405,7 @@ public struct SRPath : Equatable, CustomStringConvertible, CustomDebugStringConv
   }
   
   public static func createFile(path: SRPath) -> Bool {
-    return _fm.createFileAtPath(path.string, contents: nil, attributes: nil)
+    return FileManager.default.createFile(atPath: path.string, contents: nil, attributes: nil)
   }
   
   // MARK: - String Convertible
@@ -423,7 +427,7 @@ public func == (left: SRPath, right: SRPath) -> Bool {
 
 public func + (left: SRPath, right: String) -> SRPath {
   assert(left.isDirectory, "lvalue is must directory")
-  return left.childPath(right)
+  return left.childPath(childContentName: right)
 }
 
 // MARK: - Helper Functions
