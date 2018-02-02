@@ -1,6 +1,10 @@
 SRPath Framework
 ================
 
+*Deprecated:* You can use SRChoco URL Extensions instead this
+
+https://github.com/seorenn/SRChoco
+
 The Frameworks for File and Directory Path.
 
 ## SRPath
